@@ -90,6 +90,11 @@
     .dropzone .upload-mark { width: 44px; height: 44px; margin: 0 auto 9px; display: grid; place-items: center; border-radius: 14px; color: #9a641e; background: var(--gold-soft); font-size: 22px; }
     .dropzone b { display: block; font-size: 14px; }
     .dropzone span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .upload-preview { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 13px; text-align: left; }
+    .upload-preview figure { margin: 0; min-width: 0; }
+    .upload-preview img { width: 100%; aspect-ratio: 1 / 1.18; object-fit: cover; display: block; border-radius: 8px; border: 1px solid var(--line); }
+    .upload-preview figcaption { margin-top: 3px; color: var(--muted); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .upload-status { margin-top: 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .order-group { margin-top: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
     .order-group-head { padding: 13px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }
     .order-group-head p { color: var(--muted); font-size: 11px; margin-top: 3px; }
@@ -197,8 +202,8 @@
       <div class="view active" id="view-inventory">
         <div class="hero"><div class="hero-copy"><h2>我的卡库</h2><p>把每一张卡的成本和状态管清楚</p></div><button class="primary" data-nav="purchase">＋ 录入</button></div>
         <div class="summary">
-          <div class="summary-main"><div><div class="eyebrow">当前库存</div><strong id="inventory-count">1,284 张</strong><small>较上月 +86 张</small></div><div style="font-size:34px; opacity:.82">♠</div></div>
-          <div class="summary-foot"><div><b id="inventory-cost">¥8,620.50</b><span>库存成本</span></div><div><b>¥12,500</b><span>预估销售额</span></div><div><b style="color:#f3c77d">+45.1%</b><span>预估毛利</span></div></div>
+          <div class="summary-main"><div><div class="eyebrow">当前库存</div><strong id="inventory-count">0 张</strong><small id="inventory-count-note">按当前卡片实时统计</small></div><div style="font-size:34px; opacity:.82">♠</div></div>
+          <div class="summary-foot"><div><b id="inventory-cost">¥0.00</b><span>库存成本</span></div><div><b id="inventory-estimated">待录入</b><span>预估销售额</span></div><div><b id="inventory-margin" style="color:#f3c77d">—</b><span>预估毛利</span></div></div>
         </div>
         <label class="search"><span class="search-icon">⌕</span><input id="search-input" placeholder="搜索球员、系列、关键词、编号" /></label>
         <div class="chips" id="status-chips"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="在库">在库</button><button class="chip" data-filter="已售">已售</button><button class="chip" data-filter="待拆分">待拆分</button></div>
@@ -208,9 +213,8 @@
 
       <div class="view" id="view-purchase">
         <div class="purchase-head"><div><h2>采购入库</h2><p>支持多张截图合并计算运费</p></div><button class="icon-btn" id="refresh-batch" aria-label="刷新识别">↻</button></div>
-        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，先用示例数据体验交互</span><input id="image-input" type="file" accept="image/*" multiple hidden /></div>
-        <div class="order-group"><div class="order-group-head"><div><h3>订单 01 · 浩行拍卖精品</h3><p>7 张卡 · 商品小计 ¥139.31</p></div><span class="order-badge">已识别</span></div><div id="order-one"></div></div>
-        <div class="order-group"><div class="order-group-head"><div><h3>订单 02 · 浩行天下精品</h3><p>7 张卡 · 商品小计 ¥19.71</p></div><span class="order-badge">合并运费</span></div><div id="order-two"></div></div>
+        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，先预览并等待服务端识别</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">当前版本可以预览图片；GPT 识别需要连接服务端后执行。</div></div>
+        <div id="purchase-orders"></div>
         <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥177.02</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="159.02" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="18.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" value="14 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
       </div>
 
@@ -233,6 +237,7 @@
   <div class="modal-backdrop" id="edit-modal"><form class="modal" id="edit-form"><div class="modal-head"><div><div class="eyebrow">EDIT CARD</div><h2>编辑卡片信息</h2></div><button type="button" class="icon-btn" id="close-modal">×</button></div><div class="form-grid"><div class="image-edit"><div class="edit-preview" id="edit-preview">AM</div><div><b>卡片照片</b><p>上传正面照片，后续还可以补充背面照片。</p><label class="upload-label" for="card-image-input">选择图片</label><input id="card-image-input" type="file" accept="image/*" hidden /></div></div><div class="form-field"><label>球员/人物名称</label><input name="title" required /></div><div class="form-field"><label>系列与年份</label><input name="series" /></div><div class="form-two"><div class="form-field"><label>卡片类型</label><input name="type" /></div><div class="form-field"><label>平行/编号</label><input name="parallel" /></div></div><div class="form-field"><label>关键词（用逗号分隔）</label><input name="keywords" /></div><div class="form-two"><div class="form-field"><label>商品金额</label><input name="price" type="number" step="0.01" /></div><div class="form-field"><label>分摊运费</label><input name="shipping" type="number" step="0.01" /></div></div><div class="form-field"><label>备注</label><textarea name="notes" rows="3" placeholder="例如：卡品如图、需要补拍背面"></textarea></div><button class="primary" type="submit">保存修改</button></div></form></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
     const cards = [
       {id:1, image: 'MU', title:'Murillo', series:'2023-24 Panini Impeccable', type:'RC · 闪版', parallel:'低编 /8', keywords:['穆里略','英超','森林','新秀','闪版','/8'], price:110, shipping:12.45, cost:122.45, status:'在库'},
@@ -253,8 +258,46 @@
     let activeFilter = 'all';
     let selectedCard = cards[3];
     let saleSelection = new Set();
+    let purchaseImageUrls = [];
+    let recognizedBatch = null;
+    let recognizedCards = [];
+    const API_BASE = window.CARD_LEDGER_API_URL || 'https://card-ledger-api.443405785.workers.dev';
+    const USE_GPT_RECOGNITION = Boolean(window.CARD_LEDGER_USE_GPT);
+    const API_TOKEN = window.CARD_LEDGER_API_TOKEN || localStorage.getItem('cardLedgerApiToken') || '';
     const money = n => `¥${Number(n).toFixed(2)}`;
     const $ = id => document.getElementById(id);
+
+    function apiFetch(path, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (API_TOKEN) headers.set('Authorization', `Bearer ${API_TOKEN}`);
+      return fetch(`${API_BASE.replace(/\/$/, '')}${path}`, {...options, headers});
+    }
+
+    async function loadFromApi() {
+      if (!API_BASE) return;
+      try {
+        const response = await apiFetch('/api/cards');
+        const result = await response.json();
+        if (!response.ok || !result.data) throw new Error(result.error || '读取卡库失败');
+        if (result.data.length) {
+          cards.splice(0, cards.length, ...result.data.map(card => ({...card, image: (card.title || 'CARD').slice(0, 2).toUpperCase()})));
+          selectedCard = cards[0] || null;
+          renderInventory(); renderPurchase(); renderSales();
+        }
+      } catch (error) {
+        toast(`后端暂不可用：${error.message}`);
+      }
+    }
+
+    function renderSummary() {
+      const inventory = cards.filter(c => c.status === '在库');
+      const inventoryCost = inventory.reduce((sum, c) => sum + Number(c.cost || 0), 0);
+      $('inventory-count').textContent = `${inventory.length} 张`;
+      $('inventory-cost').textContent = money(inventoryCost);
+      $('inventory-estimated').textContent = '待录入';
+      $('inventory-margin').textContent = '—';
+      $('inventory-count-note').textContent = '按当前卡片实时统计';
+    }
 
     function cardRow(card) {
       return `<button class="card-row" data-card-id="${card.id}"><div class="card-thumb"><span>${card.image}</span><small>${card.parallel}</small></div><div class="card-main"><div class="card-title">${card.title}</div><div class="card-sub">${card.series}</div><div class="tag-line"><span class="tag gold">${card.type}</span><span class="tag">${card.parallel}</span></div></div><div class="card-price"><b>${money(card.cost)}</b><span class="status ${card.status === '已售' ? 'sold' : card.status === '待拆分' ? 'pending' : ''}">${card.status}</span></div></button>`;
@@ -264,23 +307,137 @@
       const visible = cards.filter(c => (activeFilter === 'all' || c.status === activeFilter) && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q)));
       $('inventory-list').innerHTML = visible.length ? visible.map(cardRow).join('') : '<div class="empty-state">没有找到匹配的卡片</div>';
       $('result-count').textContent = `${visible.length} 张卡`;
+      renderSummary();
     }
     function miniRows(list) {
       return list.map(c => `<div class="mini-row"><div class="mini-thumb">${c.image}</div><div><b>${c.title}</b><p>${c.type} · ${c.parallel}</p></div><div class="mini-price">${money(c.cost)}<small>单张成本</small></div></div>`).join('');
     }
     function renderPurchase() {
-      $('order-one').innerHTML = miniRows(cards.slice(0,7));
-      $('order-two').innerHTML = miniRows(cards.slice(7));
+      if (recognizedBatch) {
+        $('purchase-orders').innerHTML = recognizedBatch.orders.map((order, index) => {
+          const orderCards = recognizedCards.filter(c => c.orderIndex === index);
+          const itemCount = orderCards.length;
+          const orderSubtotal = orderCards.reduce((sum, c) => sum + Number(c.price || 0), 0);
+          return `<div class="order-group"><div class="order-group-head"><div><h3>订单 ${String(index + 1).padStart(2, '0')} · ${order.seller || '未识别卖家'}</h3><p>${itemCount} 张卡 · 商品小计 ${money(orderSubtotal)}</p></div><span class="order-badge">GPT 已识别</span></div>${miniRows(orderCards)}</div>`;
+        }).join('');
+        return;
+      }
+      const sampleOrders = [
+        {seller:'浩行拍卖精品', cards:cards.slice(0,7), badge:'示例数据'},
+        {seller:'浩行天下精品', cards:cards.slice(7), badge:'示例数据'},
+      ];
+      $('purchase-orders').innerHTML = sampleOrders.map((order, index) => `<div class="order-group"><div class="order-group-head"><div><h3>订单 ${String(index + 1).padStart(2, '0')} · ${order.seller}</h3><p>${order.cards.length} 张卡 · 商品小计 ${money(order.cards.reduce((sum, c) => sum + c.price, 0))}</p></div><span class="order-badge">${order.badge}</span></div>${miniRows(order.cards)}</div>`).join('');
+    }
+
+    function dataUrlFor(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function normalizedRecognizedCards(batch, shipping) {
+      const rows = [];
+      batch.orders.forEach((order, orderIndex) => order.items.forEach(item => {
+        const count = Math.max(1, (Number(item.cardCount) || 1) * (Number(item.quantity) || 1));
+        for (let index = 0; index < count; index += 1) rows.push({ orderIndex, item, title: item.title || '待确认卡片', price: Number(item.linePriceCny) || 0 });
+      }));
+      const subtotal = rows.reduce((sum, row) => sum + row.price, 0);
+      let allocated = 0;
+      return rows.map((row, index) => {
+        const share = index === rows.length - 1 ? Number((shipping - allocated).toFixed(2)) : Number((subtotal ? shipping * row.price / subtotal : 0).toFixed(2));
+        allocated += share;
+        const item = row.item;
+        return {
+          id: 10000 + index,
+          image: (item.title || 'CARD').slice(0, 2).toUpperCase(),
+          title: item.title || '待确认卡片',
+          series: [item.year, item.series].filter(Boolean).join(' ') || '待确认系列',
+          type: item.cardType || '待确认类型',
+          parallel: item.parallel || item.serialNumber || '未识别',
+          keywords: item.keywords || [],
+          price: row.price,
+          shipping: share,
+          cost: Number((row.price + share).toFixed(2)),
+          status: '在库',
+          orderIndex: row.orderIndex,
+        };
+      });
+    }
+
+    function moneyFromText(text, label) {
+      const match = text.match(new RegExp(`(?:${label})[^\\d]{0,12}([0-9]+(?:\\.[0-9]{1,2})?)`, 'i'));
+      return match ? Number(match[1]) : null;
+    }
+
+    function parseOcrDocument(text, index) {
+      const lines = text.split(/\r?\n/).map(line => line.replace(/[|丨]/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+      const items = [];
+      let contextStart = 0;
+      lines.forEach((line, lineIndex) => {
+        if (/商品小计|运费|实付|合计|总计|优惠/.test(line)) return;
+        const match = line.match(/[¥￥]?\s*([0-9]+(?:\.[0-9]{1,2})?)\s*(?:[x×*]\s*([0-9]+))?$/i) || line.match(/[¥￥]\s*([0-9]+(?:\.[0-9]{1,2})?)/i);
+        if (!match) return;
+        const lineText = lines.slice(contextStart, lineIndex).join(' ').replace(/^【.*?】\s*/, '').trim();
+        if (!lineText) { contextStart = lineIndex + 1; return; }
+        const year = lineText.match(/20\d{2}(?:-\d{2})?/);
+        const serial = lineText.match(/\/\s*\d{1,4}|\b\d{1,4}编\b/);
+        items.push({ title: lineText.slice(0, 90), series: year ? lineText.slice(0, 90) : '', year: year ? year[0] : null, team: null, cardType: null, parallel: serial ? serial[0] : null, serialNumber: serial ? serial[0] : null, keywords: lineText.split(/\s+/).filter(word => word.length > 1).slice(-8), linePriceCny: Number(match[1]), quantity: Number(match[2]) || 1, cardCount: 1, confidence: 0.65, sourceText: lineText });
+        contextStart = lineIndex + 1;
+      });
+      const subtotal = moneyFromText(text, '商品小计');
+      const shipping = moneyFromText(text, '运费');
+      const paid = moneyFromText(text, '实付|合计|总计');
+      return { seller: null, subtotalCny: subtotal ?? items.reduce((sum, item) => sum + (item.linePriceCny * item.quantity), 0), shippingCny: shipping, totalCny: paid, items, rawText: text, index };
+    }
+
+    async function recognizePurchaseImages(files) {
+      $('upload-status').textContent = USE_GPT_RECOGNITION ? '正在识别截图中的订单、球员、系列和金额，请稍候…' : '正在本地 OCR 识别图片文字，第一次加载中文语言包可能需要一点时间…';
+      try {
+        let data;
+        if (USE_GPT_RECOGNITION && API_BASE) {
+          const images = await Promise.all(files.map(async file => ({ name: file.name, dataUrl: await dataUrlFor(file) })));
+          const response = await fetch(`${API_BASE.replace(/\/$/, '')}/api/recognize-purchase`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({images}) });
+          const result = await response.json();
+          if (!response.ok || !result.data) throw new Error(result.error || '识别失败');
+          data = result.data;
+        } else {
+          if (!window.Tesseract) throw new Error('OCR 组件加载失败，请检查网络后重试');
+          const documents = [];
+          for (let index = 0; index < files.length; index += 1) {
+            const result = await window.Tesseract.recognize(files[index], 'chi_sim+eng', { logger: message => { if (message.status === 'recognizing text') $('upload-status').textContent = `正在识别第 ${index + 1}/${files.length} 张截图：${Math.round((message.progress || 0) * 100)}%`; } });
+            documents.push(parseOcrDocument(result.data.text, index));
+          }
+          const subtotal = documents.reduce((sum, order) => sum + (Number(order.subtotalCny) || 0), 0);
+          const shipping = documents.find(order => Number.isFinite(order.shippingCny))?.shippingCny ?? null;
+          data = { orders: documents, purchaseSubtotalCny: subtotal, shippingCny: shipping, paidCny: null, notes: ['当前使用浏览器本地 OCR，金额会自动提取；球员、系列和关键词请在入库前检查。'] };
+        }
+        recognizedBatch = data;
+        const subtotal = Number(recognizedBatch.purchaseSubtotalCny ?? recognizedBatch.orders.reduce((sum, order) => sum + (Number(order.subtotalCny) || 0), 0));
+        const shipping = Number(recognizedBatch.shippingCny) || 0;
+        $('batch-subtotal').value = subtotal.toFixed(2);
+        $('batch-shipping').value = shipping.toFixed(2);
+        recognizedCards = normalizedRecognizedCards(recognizedBatch, shipping);
+        renderPurchase();
+        recalc();
+        $('upload-status').textContent = `识别完成：${recognizedCards.length} 张卡。当前为 OCR 初稿，请检查后再确认入库。`;
+        toast(`已识别 ${recognizedCards.length} 张卡`);
+      } catch (error) {
+        $('upload-status').textContent = `识别失败：${error.message}。图片仍然保留，请检查后重试。`;
+        toast('图片识别失败');
+      }
     }
     function renderSales() {
       const q = ($('sale-search').value || '').trim().toLowerCase();
       const available = cards.filter(c => c.status === '在库' && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q)));
       $('sale-result-count').textContent = `可售 ${available.length} 张`;
-      $('sale-list').innerHTML = available.length ? available.map(c => `<div class="sale-row"><input type="checkbox" data-sale-id="${c.id}" ${saleSelection.has(c.id) ? 'checked' : ''} aria-label="选择 ${c.title}" /><div class="sale-thumb">${c.image}</div><div><b>${c.title}</b><p>${c.series} · 成本 ${money(c.cost)}</p></div><input class="sale-price-input" data-sale-price="${c.id}" type="number" step="0.01" placeholder="售出价" value="${c.soldPrice ?? ''}" aria-label="${c.title} 售出价" /></div>`).join('') : '<div class="empty-state">没有找到可售卡片</div>';
+      $('sale-list').innerHTML = available.length ? available.map(c => `<div class="sale-row"><input type="checkbox" data-sale-id="${c.id}" ${saleSelection.has(String(c.id)) ? 'checked' : ''} aria-label="选择 ${c.title}" /><div class="sale-thumb">${c.image}</div><div><b>${c.title}</b><p>${c.series} · 成本 ${money(c.cost)}</p></div><input class="sale-price-input" data-sale-price="${c.id}" type="number" step="0.01" placeholder="售出价" value="${c.soldPrice ?? ''}" aria-label="${c.title} 售出价" /></div>`).join('') : '<div class="empty-state">没有找到可售卡片</div>';
       updateSaleSummary();
     }
     function updateSaleSummary() {
-      const selected = cards.filter(c => saleSelection.has(c.id));
+      const selected = cards.filter(c => saleSelection.has(String(c.id)));
       const shipping = Number($('sale-shipping').value) || 0;
       $('sale-selected-count').textContent = `${selected.length} 张 · ${money(selected.reduce((sum,c)=>sum+c.cost,0))}`;
       $('sale-per-card').value = selected.length ? money(shipping / selected.length) : '¥0.00';
@@ -316,30 +473,66 @@
     function toast(message) { const t=$('toast'); t.textContent=message; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
     function recalc() {
       const subtotal = Number($('batch-subtotal').value) || 0; const shipping = Number($('batch-shipping').value) || 0;
+      if (recognizedBatch) {
+        recognizedCards = normalizedRecognizedCards(recognizedBatch, shipping);
+        renderPurchase();
+      }
       $('batch-total-cost').textContent = money(subtotal + shipping); toast('已重新计算本批次成本');
     }
     document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => showView(el.dataset.nav)));
     $('search-input').addEventListener('input', renderInventory);
     $('status-chips').addEventListener('click', e => { const btn=e.target.closest('[data-filter]'); if(!btn)return; activeFilter=btn.dataset.filter; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c===btn)); renderInventory(); });
-    $('inventory-list').addEventListener('click', e => { const row=e.target.closest('[data-card-id]'); if(row) showDetail(cards.find(c=>c.id === Number(row.dataset.cardId))); });
+    $('inventory-list').addEventListener('click', e => { const row=e.target.closest('[data-card-id]'); if(row) showDetail(cards.find(c=>String(c.id) === String(row.dataset.cardId))); });
     $('back-to-list').addEventListener('click', () => showView('inventory'));
     $('edit-card').addEventListener('click', openEdit);
     $('close-modal').addEventListener('click', () => $('edit-modal').classList.remove('open'));
     $('edit-modal').addEventListener('click', e => { if(e.target === $('edit-modal')) $('edit-modal').classList.remove('open'); });
-    $('card-image-input').addEventListener('change', e => { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = () => { selectedCard.imageData = reader.result; $('edit-preview').innerHTML = `<img src="${reader.result}" alt="${selectedCard.title} 卡片照片" />`; toast('卡片图片已更新'); }; reader.readAsDataURL(file); });
-    $('edit-form').addEventListener('submit', e => { e.preventDefault(); const f=e.target; Object.assign(selectedCard, {title:f.title.value, series:f.series.value, type:f.type.value, parallel:f.parallel.value, keywords:f.keywords.value.split(',').map(x=>x.trim()).filter(Boolean), price:Number(f.price.value)||0, shipping:Number(f.shipping.value)||0}); selectedCard.cost=selectedCard.price+selectedCard.shipping; $('edit-modal').classList.remove('open'); renderInventory(); showDetail(selectedCard); toast('卡片信息已保存'); });
-    $('mark-sold').addEventListener('click', () => { if(selectedCard.status === '已售'){ selectedCard.status='在库'; showDetail(selectedCard); renderInventory(); renderSales(); toast('已恢复为在库'); } else { saleSelection.add(selectedCard.id); showView('sales'); renderSales(); toast('已加入售出清单，请填写售出价'); } });
+    function compressImage(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => { const image = new Image(); image.onload = () => { const scale = Math.min(1, 900 / Math.max(image.naturalWidth, image.naturalHeight)); const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale)); canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', .74)); }; image.onerror = reject; image.src = reader.result; }; reader.readAsDataURL(file); }); }
+    $('card-image-input').addEventListener('change', async e => { const file = e.target.files[0]; if(!file) return; try { const dataUrl = await compressImage(file); selectedCard.imageData = dataUrl; $('edit-preview').innerHTML = `<img src="${dataUrl}" alt="${selectedCard.title} 卡片照片" />`; toast('卡片图片已压缩并更新'); } catch { toast('图片处理失败'); } });
+    $('edit-form').addEventListener('submit', async e => { e.preventDefault(); const f=e.target; Object.assign(selectedCard, {title:f.title.value, series:f.series.value, type:f.type.value, parallel:f.parallel.value, keywords:f.keywords.value.split(',').map(x=>x.trim()).filter(Boolean), price:Number(f.price.value)||0, shipping:Number(f.shipping.value)||0}); selectedCard.cost=selectedCard.price+selectedCard.shipping; if(API_BASE){ const response=await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({card:selectedCard})}); if(!response.ok){ toast('保存到服务端失败'); return; } if(selectedCard.imageData){ await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}/image`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dataUrl:selectedCard.imageData})}); } } $('edit-modal').classList.remove('open'); renderInventory(); showDetail(selectedCard); toast('卡片信息已保存'); });
+    $('mark-sold').addEventListener('click', () => { if(selectedCard.status === '已售'){ selectedCard.status='在库'; showDetail(selectedCard); renderInventory(); renderSales(); toast('已恢复为在库'); } else { saleSelection.add(String(selectedCard.id)); showView('sales'); renderSales(); toast('已加入售出清单，请填写售出价'); } });
     $('dropzone').addEventListener('click', () => $('image-input').click());
-    $('image-input').addEventListener('change', e => { if(e.target.files.length) toast(`已选择 ${e.target.files.length} 张截图，等待 GPT 识别`); });
+    $('image-input').addEventListener('change', e => {
+      purchaseImageUrls.forEach(url => URL.revokeObjectURL(url));
+      const files = Array.from(e.target.files || []);
+      purchaseImageUrls = files.map(file => URL.createObjectURL(file));
+      $('upload-preview').innerHTML = purchaseImageUrls.map((url, index) => `<figure><img src="${url}" alt="采购截图 ${index + 1}" /><figcaption>截图 ${index + 1}</figcaption></figure>`).join('');
+      if (purchaseImageUrls.length) {
+        recognizedBatch = null;
+        recognizedCards = [];
+        renderPurchase();
+        $('upload-status').textContent = `已选择 ${purchaseImageUrls.length} 张截图，正在准备识别…`;
+        toast(`已选择 ${purchaseImageUrls.length} 张截图`);
+        recognizePurchaseImages(files);
+      }
+    });
     $('recalc').addEventListener('click', recalc);
-    $('confirm-batch').addEventListener('click', () => toast('示例批次已确认，实际接入后会写入卡库'));
+    $('confirm-batch').addEventListener('click', async () => {
+      if (!recognizedCards.length) { toast('请先上传并识别采购截图'); return; }
+      let savedCardIds = [];
+      if (API_BASE) {
+        const response = await apiFetch('/api/batches', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({batch:{subtotalCny:Number($('batch-subtotal').value)||0, shippingCny:Number($('batch-shipping').value)||0, recognitionMethod:API_BASE ? 'ocr-or-gpt' : 'manual'}, cards:recognizedCards})});
+        if (!response.ok) { toast('入库数据保存失败'); return; }
+        const result = await response.json();
+        savedCardIds = result.data?.cardIds || [];
+      }
+      let nextId = cards.reduce((max, card) => typeof card.id === 'number' ? Math.max(max, card.id) : max, 0) + 1;
+      recognizedCards.forEach((card, index) => cards.push({...card, id: savedCardIds[index] || nextId++, orderIndex: undefined}));
+      recognizedBatch = null;
+      recognizedCards = [];
+      renderInventory();
+      renderSales();
+      renderPurchase();
+      toast('识别结果已确认并加入卡库');
+      showView('inventory');
+    });
     $('sale-search').addEventListener('input', renderSales);
     $('sale-shipping').addEventListener('input', updateSaleSummary);
-    $('sale-list').addEventListener('change', e => { const input=e.target.closest('[data-sale-id]'); const priceInput=e.target.closest('[data-sale-price]'); if(input){ const id=Number(input.dataset.saleId); if(input.checked) saleSelection.add(id); else saleSelection.delete(id); updateSaleSummary(); } if(priceInput){ const card=cards.find(c=>c.id===Number(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } } });
-    $('sale-list').addEventListener('input', e => { const priceInput=e.target.closest('[data-sale-price]'); if(!priceInput)return; const card=cards.find(c=>c.id===Number(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } });
-    $('select-all-sale').addEventListener('click', () => { const q=($('sale-search').value || '').trim().toLowerCase(); const visible=cards.filter(c => c.status === '在库' && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q))); const allSelected=visible.length && visible.every(c=>saleSelection.has(c.id)); visible.forEach(c=>allSelected?saleSelection.delete(c.id):saleSelection.add(c.id)); renderSales(); });
-    $('confirm-sale').addEventListener('click', () => { const selected=cards.filter(c=>saleSelection.has(c.id)); if(!selected.length){ toast('请先选择要售出的卡片'); return; } if(selected.some(c=>!Number.isFinite(Number(c.soldPrice)))){ toast('请先填写每张卡的售出价'); return; } const shipping=Number($('sale-shipping').value)||0; const perCard=shipping/selected.length; selected.forEach(c=>{ c.status='已售'; c.saleShipping=Number(perCard.toFixed(4)); }); saleSelection.clear(); $('sale-shipping').value='0.00'; renderSales(); renderInventory(); toast(`已售出 ${selected.length} 张卡，盈亏已记录`); });
-    renderInventory(); renderPurchase(); renderSales();
+    $('sale-list').addEventListener('change', e => { const input=e.target.closest('[data-sale-id]'); const priceInput=e.target.closest('[data-sale-price]'); if(input){ const id=input.dataset.saleId; if(input.checked) saleSelection.add(id); else saleSelection.delete(id); updateSaleSummary(); } if(priceInput){ const card=cards.find(c=>String(c.id)===String(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } } });
+    $('sale-list').addEventListener('input', e => { const priceInput=e.target.closest('[data-sale-price]'); if(!priceInput)return; const card=cards.find(c=>String(c.id)===String(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } });
+    $('select-all-sale').addEventListener('click', () => { const q=($('sale-search').value || '').trim().toLowerCase(); const visible=cards.filter(c => c.status === '在库' && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q))); const allSelected=visible.length && visible.every(c=>saleSelection.has(String(c.id))); visible.forEach(c=>allSelected?saleSelection.delete(String(c.id)):saleSelection.add(String(c.id))); renderSales(); });
+    $('confirm-sale').addEventListener('click', async () => { const selected=cards.filter(c=>saleSelection.has(String(c.id))); if(!selected.length){ toast('请先选择要售出的卡片'); return; } if(selected.some(c=>!Number.isFinite(Number(c.soldPrice)))){ toast('请先填写每张卡的售出价'); return; } const shipping=Number($('sale-shipping').value)||0; const perCard=shipping/selected.length; if(API_BASE){ const response=await apiFetch('/api/sales', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({cards:selected.map(c=>({id:c.id, soldPrice:c.soldPrice, saleShipping:Number(perCard.toFixed(4))}))})}); if(!response.ok){ toast('售出记录保存失败'); return; } } selected.forEach(c=>{ c.status='已售'; c.saleShipping=Number(perCard.toFixed(4)); }); saleSelection.clear(); $('sale-shipping').value='0.00'; renderSales(); renderInventory(); toast(`已售出 ${selected.length} 张卡，盈亏已记录`); });
+    renderInventory(); renderPurchase(); renderSales(); loadFromApi();
   </script>
 </body>
 </html>
