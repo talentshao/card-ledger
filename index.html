@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>卡藏库 · 手机端交互原型</title>
+  <style>
+    :root {
+      --ink: #15202d;
+      --ink-soft: #415166;
+      --muted: #7d8b9a;
+      --line: #e9edf1;
+      --paper: #f7f8fa;
+      --surface: #ffffff;
+      --gold: #e6aa55;
+      --gold-soft: #fff2df;
+      --teal: #1f8e85;
+      --teal-soft: #e4f4f2;
+      --rose: #c86772;
+      --shadow: 0 16px 44px rgba(24, 35, 49, .11);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #dfe5ea; color: var(--ink); font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    .app { width: min(100%, 480px); min-height: 100dvh; margin: 0 auto; background: var(--paper); position: relative; overflow: hidden; box-shadow: 0 0 0 1px rgba(19, 29, 40, .03), var(--shadow); }
+    .topbar { padding: 22px 20px 12px; display: flex; align-items: center; justify-content: space-between; background: var(--paper); }
+    .eyebrow { color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 25px; line-height: 1.2; letter-spacing: -.03em; }
+    h2 { font-size: 18px; letter-spacing: -.02em; }
+    h3 { font-size: 14px; line-height: 1.35; }
+    .avatar { width: 38px; height: 38px; border-radius: 13px; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 700; letter-spacing: -.04em; }
+    .screen { padding: 0 16px 100px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .hero { padding: 10px 4px 16px; display: flex; justify-content: space-between; align-items: end; }
+    .hero-copy { display: grid; gap: 5px; }
+    .hero-copy p { color: var(--muted); font-size: 13px; }
+    .primary { background: var(--ink); color: #fff; padding: 11px 14px; border-radius: 13px; font-weight: 700; box-shadow: 0 7px 16px rgba(21,32,45,.16); }
+    .primary:active, .icon-btn:active, .nav-item:active { transform: translateY(1px); }
+    .summary { border-radius: 22px; background: var(--ink); color: #fff; padding: 19px; position: relative; overflow: hidden; }
+    .summary::after { content: ""; width: 190px; height: 190px; position: absolute; right: -70px; top: -98px; border-radius: 50%; border: 1px solid rgba(255,255,255,.16); box-shadow: 0 0 0 25px rgba(255,255,255,.025), 0 0 0 50px rgba(255,255,255,.025); }
+    .summary .eyebrow { color: rgba(255,255,255,.58); }
+    .summary-main { display: flex; justify-content: space-between; align-items: end; gap: 12px; }
+    .summary strong { display: block; margin-top: 5px; font-size: 30px; letter-spacing: -.05em; }
+    .summary small { color: rgba(255,255,255,.66); font-size: 12px; }
+    .summary-foot { display: flex; gap: 22px; margin-top: 18px; }
+    .summary-foot div { display: grid; gap: 3px; }
+    .summary-foot b { font-size: 14px; }
+    .summary-foot span { color: rgba(255,255,255,.56); font-size: 11px; }
+    .search { margin: 15px 0 11px; display: flex; align-items: center; gap: 8px; padding: 12px 13px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; color: var(--muted); }
+    .search input { border: 0; outline: 0; width: 100%; color: var(--ink); background: transparent; font-size: 14px; }
+    .search input::placeholder { color: #a2adb8; }
+    .search-icon { font-size: 17px; }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 3px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip { flex: 0 0 auto; padding: 8px 12px; border-radius: 999px; background: var(--surface); color: var(--ink-soft); border: 1px solid var(--line); font-size: 12px; }
+    .chip.active { background: var(--gold-soft); color: #9a641e; border-color: #f3d4a7; font-weight: 700; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin: 20px 2px 10px; }
+    .section-head span { color: var(--muted); font-size: 12px; }
+    .card-list { display: grid; gap: 9px; }
+    .card-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid #edf0f3; border-radius: 18px; padding: 10px; text-align: left; width: 100%; color: inherit; box-shadow: 0 4px 16px rgba(31, 44, 60, .035); }
+    .card-row:active { background: #fbfcfd; }
+    .card-thumb { width: 64px; height: 78px; border-radius: 10px; background: linear-gradient(145deg, #27394f, #62839c 52%, #e6aa55); color: #fff; display: flex; flex-direction: column; justify-content: end; padding: 7px; overflow: hidden; position: relative; }
+    .card-thumb::before { content: ""; position: absolute; width: 48px; height: 48px; right: -15px; top: -12px; border: 1px solid rgba(255,255,255,.42); border-radius: 50%; box-shadow: 0 0 0 8px rgba(255,255,255,.1); }
+    .card-thumb span { position: relative; font-size: 15px; font-weight: 800; letter-spacing: -.05em; }
+    .card-thumb small { position: relative; font-size: 8px; opacity: .8; margin-top: 2px; }
+    .card-main { min-width: 0; display: grid; gap: 5px; }
+    .card-title { font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub { color: var(--ink-soft); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tag-line { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tag { color: #647486; background: #f1f4f6; border-radius: 5px; padding: 3px 5px; font-size: 10px; }
+    .tag.gold { color: #9a641e; background: var(--gold-soft); }
+    .card-price { text-align: right; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between; gap: 7px; }
+    .card-price b { font-size: 15px; white-space: nowrap; letter-spacing: -.03em; }
+    .status { font-size: 10px; white-space: nowrap; color: var(--teal); background: var(--teal-soft); padding: 4px 6px; border-radius: 6px; }
+    .status.sold { color: var(--rose); background: #fbecee; }
+    .status.pending { color: #9a641e; background: var(--gold-soft); }
+    .bottom-nav { position: fixed; z-index: 10; bottom: 0; width: min(100%, 480px); padding: 9px 11px calc(9px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.92); backdrop-filter: blur(15px); border-top: 1px solid rgba(214,220,226,.8); display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+    .nav-item { background: transparent; color: #8a96a3; display: grid; gap: 4px; place-items: center; padding: 5px 2px; border-radius: 10px; font-size: 10px; }
+    .nav-item.active { color: var(--ink); font-weight: 800; }
+    .nav-icon { width: 20px; height: 20px; border: 1.5px solid currentColor; border-radius: 6px; display: grid; place-items: center; font-size: 11px; }
+    .nav-item:nth-child(2) .nav-icon { border-radius: 50%; }
+    .nav-item:nth-child(3) .nav-icon { border-radius: 4px 4px 9px 9px; }
+    .nav-item:nth-child(4) .nav-icon { border-radius: 50%; }
+    .purchase-head { padding: 10px 3px 17px; display: flex; justify-content: space-between; align-items: end; }
+    .purchase-head p { color: var(--muted); font-size: 12px; margin-top: 5px; }
+    .dropzone { border: 1.5px dashed #cdd6df; border-radius: 20px; padding: 20px 15px; text-align: center; background: linear-gradient(135deg, #fff, #fafbfc); color: var(--ink-soft); }
+    .dropzone .upload-mark { width: 44px; height: 44px; margin: 0 auto 9px; display: grid; place-items: center; border-radius: 14px; color: #9a641e; background: var(--gold-soft); font-size: 22px; }
+    .dropzone b { display: block; font-size: 14px; }
+    .dropzone span { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .order-group { margin-top: 15px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+    .order-group-head { padding: 13px 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }
+    .order-group-head p { color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .order-badge { color: var(--teal); background: var(--teal-soft); padding: 5px 8px; border-radius: 7px; font-size: 10px; }
+    .batch-total { margin-top: 15px; padding: 16px; border-radius: 18px; background: var(--gold-soft); border: 1px solid #f3d4a7; }
+    .batch-total-top { display: flex; justify-content: space-between; align-items: center; }
+    .batch-total h3 { color: #805315; }
+    .batch-total strong { color: #805315; font-size: 22px; }
+    .calc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .calc-grid label { color: #9a641e; font-size: 10px; display: grid; gap: 4px; }
+    .money-input { background: rgba(255,255,255,.75); border: 1px solid #efd09f; border-radius: 9px; padding: 8px; color: #805315; outline: none; width: 100%; font-weight: 700; }
+    .batch-actions { display: flex; gap: 9px; margin-top: 14px; }
+    .secondary { flex: 1; background: #fff; color: var(--ink); border: 1px solid var(--line); padding: 11px 12px; border-radius: 13px; font-weight: 700; }
+    .batch-actions .primary { flex: 1.4; }
+    .mini-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 10px 13px; border-bottom: 1px solid #f0f2f4; }
+    .mini-row:last-child { border-bottom: 0; }
+    .mini-thumb { width: 42px; height: 50px; border-radius: 7px; background: linear-gradient(150deg, #253548, #97b0b6); color: #fff; display: grid; place-items: end start; padding: 5px; font-size: 10px; font-weight: 800; }
+    .mini-row b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-row p { color: var(--muted); font-size: 10px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mini-price { text-align: right; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .mini-price small { display: block; color: var(--muted); font-size: 10px; font-weight: 400; margin-top: 3px; }
+    .empty-state { padding: 46px 20px; text-align: center; color: var(--muted); }
+    .sales-panel, .more-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin-top: 12px; }
+    .sales-panel h2, .more-panel h2 { margin-bottom: 8px; }
+    .sales-panel p, .more-panel p { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .sale-search { margin-top: 3px; }
+    .sale-tools { display: flex; justify-content: space-between; align-items: center; margin: 13px 2px 9px; }
+    .sale-tools span { color: var(--muted); font-size: 12px; }
+    .select-all { color: #9a641e; background: transparent; font-size: 12px; font-weight: 700; padding: 5px 0; }
+    .sale-list { display: grid; gap: 8px; }
+    .sale-row { display: grid; grid-template-columns: 22px 45px minmax(0,1fr) auto; gap: 9px; align-items: center; padding: 9px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 15px; }
+    .sale-row:has(input:checked) { border-color: #e8c17f; background: #fffaf1; }
+    .sale-row input { width: 18px; height: 18px; accent-color: var(--gold); }
+    .sale-row .sale-price-input { width: 74px; height: 34px; min-width: 74px; accent-color: auto; border: 1px solid #e1c28e; background: #fffdf8; color: var(--ink); border-radius: 9px; padding: 7px 6px; outline: none; text-align: right; font-size: 13px; }
+    .sale-row .sale-price-input::placeholder { color: #a48a64; font-size: 11px; }
+    .sale-row .sale-price-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(230,170,85,.18); }
+    .sale-thumb { width: 45px; height: 55px; border-radius: 8px; background: linear-gradient(145deg, #27394f, #62839c 52%, #e6aa55); color: #fff; display: grid; place-items: end start; padding: 5px; font-size: 10px; font-weight: 800; }
+    .sale-row b { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sale-row p { color: var(--muted); font-size: 10px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sale-row strong { font-size: 12px; white-space: nowrap; }
+    .sale-price-input { width: 65px; border: 1px solid #ead7b5; background: #fff; color: var(--ink); border-radius: 8px; padding: 7px 6px; outline: none; text-align: right; font-size: 12px; }
+    .sale-price-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(230,170,85,.14); }
+    .sale-summary { margin-top: 14px; padding: 15px; background: var(--ink); color: #fff; border-radius: 18px; }
+    .sale-summary-top { display: flex; justify-content: space-between; align-items: center; }
+    .sale-summary-top span { color: rgba(255,255,255,.63); font-size: 11px; }
+    .sale-summary-top b { font-size: 17px; }
+    .sale-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px; }
+    .sale-summary-grid label { color: rgba(255,255,255,.62); font-size: 10px; display: grid; gap: 5px; }
+    .sale-summary-grid input { width: 100%; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1); color: #fff; border-radius: 9px; padding: 9px; outline: none; }
+    .sale-summary .primary { width: 100%; margin-top: 12px; background: var(--gold); color: #4e3515; box-shadow: none; }
+    .sale-profit { margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(255,255,255,.14); display: flex; justify-content: space-between; align-items: center; }
+    .sale-profit span { color: rgba(255,255,255,.62); font-size: 11px; }
+    .sale-profit b { font-size: 17px; color: #f3c77d; }
+    .detail-back { display: flex; align-items: center; gap: 8px; background: transparent; color: var(--ink-soft); padding: 8px 0; font-weight: 700; }
+    .detail-hero { display: grid; grid-template-columns: 118px minmax(0,1fr); gap: 16px; align-items: center; padding: 13px 0 20px; }
+    .detail-thumb { width: 118px; height: 150px; border-radius: 18px; background: linear-gradient(145deg, #27394f, #62839c 52%, #e6aa55); display: flex; flex-direction: column; justify-content: end; padding: 13px; color: #fff; position: relative; overflow: hidden; }
+    .detail-thumb::before { content: ""; position: absolute; width: 110px; height: 110px; top: -33px; right: -34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.43); box-shadow: 0 0 0 16px rgba(255,255,255,.09), 0 0 0 32px rgba(255,255,255,.07); }
+    .detail-thumb b { font-size: 28px; letter-spacing: -.08em; position: relative; }
+    .detail-thumb span { font-size: 10px; position: relative; opacity: .82; }
+    .detail-hero h2 { font-size: 21px; }
+    .detail-hero p { color: var(--ink-soft); font-size: 12px; line-height: 1.6; margin-top: 6px; }
+    .detail-price { color: var(--teal); font-size: 22px; font-weight: 800; margin-top: 10px; letter-spacing: -.04em; }
+    .detail-section { margin-top: 17px; }
+    .detail-section h3 { margin-bottom: 9px; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .info-cell { background: var(--surface); padding: 11px; }
+    .info-cell span { display: block; color: var(--muted); font-size: 10px; margin-bottom: 4px; }
+    .info-cell b { display: block; font-size: 13px; line-height: 1.35; word-break: break-word; }
+    .keyword-cloud { display: flex; flex-wrap: wrap; gap: 7px; }
+    .keyword { background: var(--gold-soft); color: #915d1b; border-radius: 7px; padding: 6px 8px; font-size: 11px; }
+    .detail-actions { display: flex; gap: 9px; margin: 20px 0 16px; }
+    .detail-actions button { flex: 1; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(12,20,28,.46); z-index: 30; display: none; align-items: end; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .modal { width: min(100%, 480px); background: var(--surface); border-radius: 24px 24px 0 0; padding: 18px 17px calc(17px + env(safe-area-inset-bottom)); max-height: 88dvh; overflow: auto; animation: rise .2s ease-out; }
+    @keyframes rise { from { transform: translateY(20px); opacity: .5; } to { transform: translateY(0); opacity: 1; } }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 13px; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 10px; background: #f2f4f6; color: var(--ink-soft); font-size: 18px; }
+    .form-grid { display: grid; gap: 11px; }
+    .image-edit { display: grid; grid-template-columns: 58px minmax(0,1fr); gap: 11px; align-items: center; padding: 10px; border-radius: 14px; background: #f7f8fa; border: 1px solid var(--line); }
+    .edit-preview { width: 58px; height: 73px; border-radius: 9px; background: linear-gradient(145deg, #27394f, #62839c 52%, #e6aa55); color: #fff; display: grid; place-items: end start; padding: 7px; overflow: hidden; font-weight: 800; font-size: 13px; }
+    .edit-preview img { width: 100%; height: 100%; object-fit: cover; display: block; margin: -7px; width: calc(100% + 14px); height: calc(100% + 14px); }
+    .image-edit b { display: block; font-size: 12px; }
+    .image-edit p { color: var(--muted); font-size: 10px; line-height: 1.5; margin-top: 3px; }
+    .upload-label { display: inline-block; margin-top: 7px; padding: 7px 9px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+    .upload-label:active { background: var(--gold-soft); }
+    .form-field { display: grid; gap: 5px; }
+    .form-field label { color: var(--muted); font-size: 11px; }
+    .form-field input, .form-field textarea, .form-field select { width: 100%; border: 1px solid var(--line); border-radius: 11px; padding: 11px; color: var(--ink); outline: none; background: #fcfdfe; font-size: 14px; }
+    .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(230,170,85,.14); }
+    .form-two { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .toast { position: fixed; z-index: 50; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--ink); color: #fff; padding: 11px 15px; border-radius: 12px; font-size: 12px; opacity: 0; pointer-events: none; transition: .2s ease; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media (min-width: 520px) { .app { margin: 18px auto; min-height: calc(100dvh - 36px); border-radius: 28px; } .bottom-nav { border-radius: 0 0 28px 28px; } }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <header class="topbar">
+      <div><div class="eyebrow">CARD VAULT</div><h1>卡藏库</h1></div>
+      <div class="avatar">LV</div>
+    </header>
+
+    <section class="screen">
+      <div class="view active" id="view-inventory">
+        <div class="hero"><div class="hero-copy"><h2>我的卡库</h2><p>把每一张卡的成本和状态管清楚</p></div><button class="primary" data-nav="purchase">＋ 录入</button></div>
+        <div class="summary">
+          <div class="summary-main"><div><div class="eyebrow">当前库存</div><strong id="inventory-count">1,284 张</strong><small>较上月 +86 张</small></div><div style="font-size:34px; opacity:.82">♠</div></div>
+          <div class="summary-foot"><div><b id="inventory-cost">¥8,620.50</b><span>库存成本</span></div><div><b>¥12,500</b><span>预估销售额</span></div><div><b style="color:#f3c77d">+45.1%</b><span>预估毛利</span></div></div>
+        </div>
+        <label class="search"><span class="search-icon">⌕</span><input id="search-input" placeholder="搜索球员、系列、关键词、编号" /></label>
+        <div class="chips" id="status-chips"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="在库">在库</button><button class="chip" data-filter="已售">已售</button><button class="chip" data-filter="待拆分">待拆分</button></div>
+        <div class="section-head"><h2>最近入库</h2><span id="result-count">14 张示例卡</span></div>
+        <div class="card-list" id="inventory-list"></div>
+      </div>
+
+      <div class="view" id="view-purchase">
+        <div class="purchase-head"><div><h2>采购入库</h2><p>支持多张截图合并计算运费</p></div><button class="icon-btn" id="refresh-batch" aria-label="刷新识别">↻</button></div>
+        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，先用示例数据体验交互</span><input id="image-input" type="file" accept="image/*" multiple hidden /></div>
+        <div class="order-group"><div class="order-group-head"><div><h3>订单 01 · 浩行拍卖精品</h3><p>7 张卡 · 商品小计 ¥139.31</p></div><span class="order-badge">已识别</span></div><div id="order-one"></div></div>
+        <div class="order-group"><div class="order-group-head"><div><h3>订单 02 · 浩行天下精品</h3><p>7 张卡 · 商品小计 ¥19.71</p></div><span class="order-badge">合并运费</span></div><div id="order-two"></div></div>
+        <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥177.02</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="159.02" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="18.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" value="14 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
+      </div>
+
+      <div class="view" id="view-sales"><div class="hero"><div class="hero-copy"><h2>批量售出</h2><p>搜索卡片，勾选后填写售出价和运费</p></div><button class="primary" data-nav="inventory">看卡库</button></div><label class="search sale-search"><span class="search-icon">⌕</span><input id="sale-search" placeholder="搜索球员、系列、关键词、编号" /></label><div class="sale-tools"><span id="sale-result-count">可售 13 张</span><button class="select-all" id="select-all-sale">全选当前结果</button></div><div class="sale-list" id="sale-list"></div><div class="sale-summary"><div class="sale-summary-top"><span>已选择卡片</span><b id="sale-selected-count">0 张</b></div><div class="sale-summary-grid"><label>本次运费<input id="sale-shipping" type="number" step="0.01" value="0.00" inputmode="decimal" /></label><label>平均每张运费<input id="sale-per-card" value="¥0.00" disabled /></label></div><div class="sale-profit"><span>预计总盈亏</span><b id="sale-profit">¥0.00</b></div><button class="primary" id="confirm-sale">确认售出</button></div></div>
+      <div class="view" id="view-more"><div class="hero"><div class="hero-copy"><h2>更多</h2><p>管理你的卡库偏好</p></div></div><div class="more-panel"><h2>当前原型范围</h2><p>这一版先验证手机端录入、合并运费、单张成本、搜索、筛选和编辑体验。确认交互顺手后，再连接 GPT 和服务端。</p></div></div>
+
+      <div class="view" id="view-detail">
+        <button class="detail-back" id="back-to-list">‹ 返回卡库</button>
+        <div class="detail-hero"><div class="detail-thumb"><b id="detail-initials">AM</b><span>ONE-OF-ONE VIEW</span></div><div><h2 id="detail-title">Aaron Wan-Bissaka</h2><p id="detail-sub">2026 Panini Prizm FIFA<br>世界杯 · 枫叶折 · /86</p><div class="detail-price" id="detail-cost">¥6.90 / 张</div></div></div>
+        <div class="detail-actions"><button class="primary" id="edit-card">编辑这张卡</button><button class="secondary" id="mark-sold">加入售出清单</button></div>
+        <div class="detail-section"><h3>卡片信息</h3><div class="info-grid" id="detail-info"></div></div>
+        <div class="detail-section"><h3>关键词</h3><div class="keyword-cloud" id="detail-keywords"></div></div>
+        <div class="detail-section"><h3>成本拆解</h3><div class="info-grid" id="detail-cost-info"></div></div>
+      </div>
+    </section>
+
+    <nav class="bottom-nav" aria-label="主导航"><button class="nav-item active" data-nav="inventory"><span class="nav-icon">▦</span><span>卡库</span></button><button class="nav-item" data-nav="purchase"><span class="nav-icon">＋</span><span>采购</span></button><button class="nav-item" data-nav="sales"><span class="nav-icon">↗</span><span>销售</span></button><button class="nav-item" data-nav="more"><span class="nav-icon">⋯</span><span>更多</span></button></nav>
+  </main>
+
+  <div class="modal-backdrop" id="edit-modal"><form class="modal" id="edit-form"><div class="modal-head"><div><div class="eyebrow">EDIT CARD</div><h2>编辑卡片信息</h2></div><button type="button" class="icon-btn" id="close-modal">×</button></div><div class="form-grid"><div class="image-edit"><div class="edit-preview" id="edit-preview">AM</div><div><b>卡片照片</b><p>上传正面照片，后续还可以补充背面照片。</p><label class="upload-label" for="card-image-input">选择图片</label><input id="card-image-input" type="file" accept="image/*" hidden /></div></div><div class="form-field"><label>球员/人物名称</label><input name="title" required /></div><div class="form-field"><label>系列与年份</label><input name="series" /></div><div class="form-two"><div class="form-field"><label>卡片类型</label><input name="type" /></div><div class="form-field"><label>平行/编号</label><input name="parallel" /></div></div><div class="form-field"><label>关键词（用逗号分隔）</label><input name="keywords" /></div><div class="form-two"><div class="form-field"><label>商品金额</label><input name="price" type="number" step="0.01" /></div><div class="form-field"><label>分摊运费</label><input name="shipping" type="number" step="0.01" /></div></div><div class="form-field"><label>备注</label><textarea name="notes" rows="3" placeholder="例如：卡品如图、需要补拍背面"></textarea></div><button class="primary" type="submit">保存修改</button></div></form></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const cards = [
+      {id:1, image: 'MU', title:'Murillo', series:'2023-24 Panini Impeccable', type:'RC · 闪版', parallel:'低编 /8', keywords:['穆里略','英超','森林','新秀','闪版','/8'], price:110, shipping:12.45, cost:122.45, status:'在库'},
+      {id:2, image: 'BN', title:'Bilal Nadir', series:'2024 Topps Chrome', type:'RC · 紫碎点折', parallel:'折射 /299', keywords:['比拉尔·纳迪尔','马赛','欧联','RC','紫碎点折','/299'], price:3.05, shipping:.35, cost:3.40, status:'在库'},
+      {id:3, image: 'MG', title:'Mason Greenwood', series:'2021 Topps Chrome', type:'粉折', parallel:'折射 /175', keywords:['梅森·格林伍德','曼联','欧冠','粉折','/175'], price:11, shipping:1.24, cost:12.24, status:'在库'},
+      {id:4, image: 'AW', title:'Aaron Wan-Bissaka', series:'2026 Panini Prizm FIFA', type:'枫叶折', parallel:'折射 /86', keywords:['万比萨卡','世界杯','枫叶折','/86'], price:6.2, shipping:.70, cost:6.90, status:'在库'},
+      {id:5, image: 'AP', title:'Andreas Pereira', series:'2023-24 Panini Prizm', type:'紫白折', parallel:'折射 /92', keywords:['安德烈亚斯·佩雷拉','富勒姆','英超','/92'], price:3.06, shipping:.35, cost:3.41, status:'在库'},
+      {id:6, image: 'ZY', title:'严子怡', series:'FING Genesis · 启示录', type:'RS · 特卡', parallel:'折射', keywords:['FING Genesis','严子怡','启示录','RS','新秀','特卡'], price:5, shipping:.57, cost:5.57, status:'在库'},
+      {id:7, image: 'WJ', title:'王久香', series:'FING Genesis', type:'Star Watch · 特卡', parallel:'折射', keywords:['王久香','跨栏','Star Watch','FING Genesis'], price:1, shipping:.11, cost:1.11, status:'已售'},
+      {id:8, image: 'SV', title:'Sepp Van Den Berg', series:'2026 Topps', type:'蓝折', parallel:'折射 /150', keywords:['范登贝尔赫','布伦特福德','英超','蓝折','/150'], price:3.06, shipping:.35, cost:3.41, status:'在库'},
+      {id:9, image: 'MV', title:'Marco Verratti', series:'2023 Topps', type:'粉碎点折', parallel:'折射', keywords:['维拉蒂','大巴黎','欧冠','粉碎点折'], price:1, shipping:.11, cost:1.11, status:'在库'},
+      {id:10, image: 'AO', title:'Ali Olwan', series:'2026 Panini Prizm FIFA', type:'RC · 橙脉冲折', parallel:'折射 /99', keywords:['阿里·奥尔万','约旦','世界杯','RC','/99'], price:3.15, shipping:.36, cost:3.51, status:'在库'},
+      {id:11, image: 'YB', title:'Yassine Bounou', series:'2026 Panini Prizm FIFA', type:'紫龙鳞折', parallel:'折射 /299', keywords:['布努','摩洛哥','世界杯','/299'], price:3.11, shipping:.35, cost:3.46, status:'在库'},
+      {id:12, image: 'AO', title:'Azzedine Ounahi', series:'2026 Panini Prizm FIFA', type:'紫龙鳞折', parallel:'折射 /299', keywords:['欧纳希','摩洛哥','世界杯','/299'], price:3.11, shipping:.35, cost:3.46, status:'待拆分'},
+      {id:13, image: 'OB', title:'Oliver Baumann', series:'2026 Panini Prizm FIFA', type:'紫龙鳞折', parallel:'折射 /299', keywords:['奥利弗·鲍曼','德国','世界杯','/299'], price:3.22, shipping:.36, cost:3.58, status:'在库'},
+      {id:14, image: 'MA', title:'Manuel Akanji', series:'2025-26 Panini Donruss Optic FIFA', type:'橙折', parallel:'折射 /99', keywords:['阿坎吉','瑞士','世界杯','/99'], price:3.06, shipping:.35, cost:3.41, status:'在库'}
+    ];
+    let activeFilter = 'all';
+    let selectedCard = cards[3];
+    let saleSelection = new Set();
+    const money = n => `¥${Number(n).toFixed(2)}`;
+    const $ = id => document.getElementById(id);
+
+    function cardRow(card) {
+      return `<button class="card-row" data-card-id="${card.id}"><div class="card-thumb"><span>${card.image}</span><small>${card.parallel}</small></div><div class="card-main"><div class="card-title">${card.title}</div><div class="card-sub">${card.series}</div><div class="tag-line"><span class="tag gold">${card.type}</span><span class="tag">${card.parallel}</span></div></div><div class="card-price"><b>${money(card.cost)}</b><span class="status ${card.status === '已售' ? 'sold' : card.status === '待拆分' ? 'pending' : ''}">${card.status}</span></div></button>`;
+    }
+    function renderInventory() {
+      const q = ($('search-input').value || '').trim().toLowerCase();
+      const visible = cards.filter(c => (activeFilter === 'all' || c.status === activeFilter) && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q)));
+      $('inventory-list').innerHTML = visible.length ? visible.map(cardRow).join('') : '<div class="empty-state">没有找到匹配的卡片</div>';
+      $('result-count').textContent = `${visible.length} 张卡`;
+    }
+    function miniRows(list) {
+      return list.map(c => `<div class="mini-row"><div class="mini-thumb">${c.image}</div><div><b>${c.title}</b><p>${c.type} · ${c.parallel}</p></div><div class="mini-price">${money(c.cost)}<small>单张成本</small></div></div>`).join('');
+    }
+    function renderPurchase() {
+      $('order-one').innerHTML = miniRows(cards.slice(0,7));
+      $('order-two').innerHTML = miniRows(cards.slice(7));
+    }
+    function renderSales() {
+      const q = ($('sale-search').value || '').trim().toLowerCase();
+      const available = cards.filter(c => c.status === '在库' && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q)));
+      $('sale-result-count').textContent = `可售 ${available.length} 张`;
+      $('sale-list').innerHTML = available.length ? available.map(c => `<div class="sale-row"><input type="checkbox" data-sale-id="${c.id}" ${saleSelection.has(c.id) ? 'checked' : ''} aria-label="选择 ${c.title}" /><div class="sale-thumb">${c.image}</div><div><b>${c.title}</b><p>${c.series} · 成本 ${money(c.cost)}</p></div><input class="sale-price-input" data-sale-price="${c.id}" type="number" step="0.01" placeholder="售出价" value="${c.soldPrice ?? ''}" aria-label="${c.title} 售出价" /></div>`).join('') : '<div class="empty-state">没有找到可售卡片</div>';
+      updateSaleSummary();
+    }
+    function updateSaleSummary() {
+      const selected = cards.filter(c => saleSelection.has(c.id));
+      const shipping = Number($('sale-shipping').value) || 0;
+      $('sale-selected-count').textContent = `${selected.length} 张 · ${money(selected.reduce((sum,c)=>sum+c.cost,0))}`;
+      $('sale-per-card').value = selected.length ? money(shipping / selected.length) : '¥0.00';
+      const hasPrices = selected.every(c => Number.isFinite(Number(c.soldPrice)));
+      $('sale-profit').textContent = hasPrices ? money(selected.reduce((sum,c)=>sum+Number(c.soldPrice||0)-c.cost,0)-shipping) : '待填写售出价';
+    }
+    function showView(name) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      $(`view-${name}`).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === name));
+      window.scrollTo({top:0, behavior:'smooth'});
+    }
+    function showDetail(card) {
+      selectedCard = card;
+      const detailThumb = document.querySelector('.detail-thumb');
+      detailThumb.innerHTML = card.imageData ? `<img src="${card.imageData}" alt="${card.title} 卡片照片" style="width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0" /><span style="position:relative;z-index:1">${card.title}</span>` : `<b id="detail-initials">${card.image}</b><span>ONE-OF-ONE VIEW</span>`;
+      $('detail-title').textContent = card.title;
+      $('detail-sub').innerHTML = `${card.series}<br>${card.type} · ${card.parallel}`;
+      $('detail-cost').textContent = `${money(card.cost)} / 张`;
+      $('mark-sold').textContent = card.status === '已售' ? '恢复在库' : '加入售出清单';
+      $('detail-info').innerHTML = [['系列',card.series],['卡片类型',card.type],['平行/编号',card.parallel],['状态',card.status],['采购批次','2026-10-19 · 合并运费'],['存放位置','未设置']].map(x => `<div class="info-cell"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+      $('detail-keywords').innerHTML = card.keywords.map(k => `<span class="keyword">${k}</span>`).join('');
+      const saleInfo = card.status === '已售' ? [['售出价',money(card.soldPrice || 0)],['售出运费',money(card.saleShipping || 0)],['本张盈亏',money((card.soldPrice || 0) - card.cost - (card.saleShipping || 0))]] : [];
+      $('detail-cost-info').innerHTML = [['商品金额',money(card.price)],['分摊运费',money(card.shipping)],['单张实际成本',money(card.cost)],['销售状态',card.status],...saleInfo].map(x => `<div class="info-cell"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
+      showView('detail');
+    }
+    function openEdit() {
+      const f = $('edit-form');
+      f.title.value = selectedCard.title; f.series.value = selectedCard.series; f.type.value = selectedCard.type; f.parallel.value = selectedCard.parallel; f.keywords.value = selectedCard.keywords.join(', '); f.price.value = selectedCard.price; f.shipping.value = selectedCard.shipping; f.notes.value = '';
+      $('edit-preview').innerHTML = selectedCard.imageData ? `<img src="${selectedCard.imageData}" alt="${selectedCard.title} 卡片照片" />` : selectedCard.image;
+      $('edit-modal').classList.add('open');
+    }
+    function toast(message) { const t=$('toast'); t.textContent=message; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+    function recalc() {
+      const subtotal = Number($('batch-subtotal').value) || 0; const shipping = Number($('batch-shipping').value) || 0;
+      $('batch-total-cost').textContent = money(subtotal + shipping); toast('已重新计算本批次成本');
+    }
+    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => showView(el.dataset.nav)));
+    $('search-input').addEventListener('input', renderInventory);
+    $('status-chips').addEventListener('click', e => { const btn=e.target.closest('[data-filter]'); if(!btn)return; activeFilter=btn.dataset.filter; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c===btn)); renderInventory(); });
+    $('inventory-list').addEventListener('click', e => { const row=e.target.closest('[data-card-id]'); if(row) showDetail(cards.find(c=>c.id === Number(row.dataset.cardId))); });
+    $('back-to-list').addEventListener('click', () => showView('inventory'));
+    $('edit-card').addEventListener('click', openEdit);
+    $('close-modal').addEventListener('click', () => $('edit-modal').classList.remove('open'));
+    $('edit-modal').addEventListener('click', e => { if(e.target === $('edit-modal')) $('edit-modal').classList.remove('open'); });
+    $('card-image-input').addEventListener('change', e => { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = () => { selectedCard.imageData = reader.result; $('edit-preview').innerHTML = `<img src="${reader.result}" alt="${selectedCard.title} 卡片照片" />`; toast('卡片图片已更新'); }; reader.readAsDataURL(file); });
+    $('edit-form').addEventListener('submit', e => { e.preventDefault(); const f=e.target; Object.assign(selectedCard, {title:f.title.value, series:f.series.value, type:f.type.value, parallel:f.parallel.value, keywords:f.keywords.value.split(',').map(x=>x.trim()).filter(Boolean), price:Number(f.price.value)||0, shipping:Number(f.shipping.value)||0}); selectedCard.cost=selectedCard.price+selectedCard.shipping; $('edit-modal').classList.remove('open'); renderInventory(); showDetail(selectedCard); toast('卡片信息已保存'); });
+    $('mark-sold').addEventListener('click', () => { if(selectedCard.status === '已售'){ selectedCard.status='在库'; showDetail(selectedCard); renderInventory(); renderSales(); toast('已恢复为在库'); } else { saleSelection.add(selectedCard.id); showView('sales'); renderSales(); toast('已加入售出清单，请填写售出价'); } });
+    $('dropzone').addEventListener('click', () => $('image-input').click());
+    $('image-input').addEventListener('change', e => { if(e.target.files.length) toast(`已选择 ${e.target.files.length} 张截图，等待 GPT 识别`); });
+    $('recalc').addEventListener('click', recalc);
+    $('confirm-batch').addEventListener('click', () => toast('示例批次已确认，实际接入后会写入卡库'));
+    $('sale-search').addEventListener('input', renderSales);
+    $('sale-shipping').addEventListener('input', updateSaleSummary);
+    $('sale-list').addEventListener('change', e => { const input=e.target.closest('[data-sale-id]'); const priceInput=e.target.closest('[data-sale-price]'); if(input){ const id=Number(input.dataset.saleId); if(input.checked) saleSelection.add(id); else saleSelection.delete(id); updateSaleSummary(); } if(priceInput){ const card=cards.find(c=>c.id===Number(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } } });
+    $('sale-list').addEventListener('input', e => { const priceInput=e.target.closest('[data-sale-price]'); if(!priceInput)return; const card=cards.find(c=>c.id===Number(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } });
+    $('select-all-sale').addEventListener('click', () => { const q=($('sale-search').value || '').trim().toLowerCase(); const visible=cards.filter(c => c.status === '在库' && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q))); const allSelected=visible.length && visible.every(c=>saleSelection.has(c.id)); visible.forEach(c=>allSelected?saleSelection.delete(c.id):saleSelection.add(c.id)); renderSales(); });
+    $('confirm-sale').addEventListener('click', () => { const selected=cards.filter(c=>saleSelection.has(c.id)); if(!selected.length){ toast('请先选择要售出的卡片'); return; } if(selected.some(c=>!Number.isFinite(Number(c.soldPrice)))){ toast('请先填写每张卡的售出价'); return; } const shipping=Number($('sale-shipping').value)||0; const perCard=shipping/selected.length; selected.forEach(c=>{ c.status='已售'; c.saleShipping=Number(perCard.toFixed(4)); }); saleSelection.clear(); $('sale-shipping').value='0.00'; renderSales(); renderInventory(); toast(`已售出 ${selected.length} 张卡，盈亏已记录`); });
+    renderInventory(); renderPurchase(); renderSales();
+  </script>
+</body>
+</html>
