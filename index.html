@@ -213,7 +213,7 @@
 
       <div class="view" id="view-purchase">
         <div class="purchase-head"><div><h2>采购入库</h2><p>支持多张截图合并计算运费</p></div><button class="icon-btn" id="refresh-batch" aria-label="刷新识别">↻</button></div>
-        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，先预览并等待服务端识别</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">当前版本可以预览图片；GPT 识别需要连接服务端后执行。</div></div>
+        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，浏览器本地 OCR 后检查结果</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">支持本地 OCR 识别文字；识别后请检查，再确认入库。</div></div>
         <div id="purchase-orders"></div>
         <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥177.02</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="159.02" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="18.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" value="14 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
       </div>
@@ -318,7 +318,7 @@
           const orderCards = recognizedCards.filter(c => c.orderIndex === index);
           const itemCount = orderCards.length;
           const orderSubtotal = orderCards.reduce((sum, c) => sum + Number(c.price || 0), 0);
-          return `<div class="order-group"><div class="order-group-head"><div><h3>订单 ${String(index + 1).padStart(2, '0')} · ${order.seller || '未识别卖家'}</h3><p>${itemCount} 张卡 · 商品小计 ${money(orderSubtotal)}</p></div><span class="order-badge">GPT 已识别</span></div>${miniRows(orderCards)}</div>`;
+          return `<div class="order-group"><div class="order-group-head"><div><h3>订单 ${String(index + 1).padStart(2, '0')} · ${order.seller || '未识别卖家'}</h3><p>${itemCount} 张卡 · 商品小计 ${money(orderSubtotal)}</p></div><span class="order-badge">识别初稿</span></div>${miniRows(orderCards)}</div>`;
         }).join('');
         return;
       }
