@@ -284,7 +284,7 @@
     let recognizedBatch = null;
     let recognizedCards = [];
     let manualCardRows = [{title:'', series:'', type:'', parallel:'', keywords:'', price:''}];
-    const API_BASE = window.CARD_LEDGER_API_URL || (location.hostname === SECURE_APP_HOST ? '' : SECURE_APP_URL);
+    const API_BASE = window.CARD_LEDGER_API_URL || SECURE_APP_URL;
     const USE_GPT_RECOGNITION = true;
     const API_TOKEN = window.CARD_LEDGER_API_TOKEN || localStorage.getItem('cardLedgerApiToken') || '';
     const money = n => `¥${Number(n).toFixed(2)}`;
