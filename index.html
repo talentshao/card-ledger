@@ -215,13 +215,13 @@
 
       <div class="view" id="view-purchase">
         <div class="purchase-head"><div><h2>采购入库</h2><p>支持多张截图合并计算运费</p></div><button class="icon-btn" id="refresh-batch" aria-label="刷新识别">↻</button></div>
-        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，由 GPT 识别订单、卡片和金额</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">GPT 会先生成识别初稿；请检查每张卡和运费后，再确认入库。</div></div>
+        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，由 AI 识别订单、卡片和金额</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">AI 会先生成识别初稿；请检查每张卡和运费后，再确认入库。</div></div>
         <div id="purchase-orders"></div>
         <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥0.00</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="0.00" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="0.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" id="batch-card-count" value="0 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
       </div>
 
       <div class="view" id="view-sales"><div class="hero"><div class="hero-copy"><h2>批量售出</h2><p>搜索卡片，勾选后填写售出价和运费</p></div><button class="primary" data-nav="inventory">看卡库</button></div><label class="search sale-search"><span class="search-icon">⌕</span><input id="sale-search" placeholder="搜索球员、系列、关键词、编号" /></label><div class="sale-tools"><span id="sale-result-count">可售 13 张</span><button class="select-all" id="select-all-sale">全选当前结果</button></div><div class="sale-list" id="sale-list"></div><div class="sale-summary"><div class="sale-summary-top"><span>已选择卡片</span><b id="sale-selected-count">0 张</b></div><div class="sale-summary-grid"><label>本次运费<input id="sale-shipping" type="number" step="0.01" value="0.00" inputmode="decimal" /></label><label>平均每张运费<input id="sale-per-card" value="¥0.00" disabled /></label></div><div class="sale-profit"><span>预计总盈亏</span><b id="sale-profit">¥0.00</b></div><button class="primary" id="confirm-sale">确认售出</button></div></div>
-      <div class="view" id="view-more"><div class="hero"><div class="hero-copy"><h2>更多</h2><p>管理你的卡库偏好</p></div></div><div class="more-panel"><h2>当前功能</h2><p>采购截图由服务端 GPT 识别，结果会先作为识别初稿展示。确认后才会写入卡库；入库卡片可以继续编辑或删除。</p></div></div>
+      <div class="view" id="view-more"><div class="hero"><div class="hero-copy"><h2>更多</h2><p>管理你的卡库偏好</p></div></div><div class="more-panel"><h2>当前功能</h2><p>采购截图由服务端 AI 识别，结果会先作为识别初稿展示。确认后才会写入卡库；入库卡片可以继续编辑或删除。</p></div></div>
 
       <div class="view" id="view-detail">
         <button class="detail-back" id="back-to-list">‹ 返回卡库</button>
@@ -306,7 +306,7 @@
         }).join('');
         return;
       }
-      $('purchase-orders').innerHTML = '<div class="empty-state">上传采购截图后，这里会显示 GPT 识别初稿</div>';
+      $('purchase-orders').innerHTML = '<div class="empty-state">上传采购截图后，这里会显示 AI 识别初稿</div>';
     }
 
     function dataUrlFor(file) {
@@ -377,7 +377,7 @@
     }
 
     async function recognizePurchaseImages(files) {
-      $('upload-status').textContent = '正在通过 GPT 识别截图中的订单、球员、系列、关键词和金额，请稍候…';
+      $('upload-status').textContent = '正在通过 AI 识别截图中的订单、球员、系列、关键词和金额，请稍候…';
       try {
         if (!API_BASE) throw new Error('服务端地址未配置');
         const images = await Promise.all(files.map(async file => ({ name: file.name, dataUrl: await compressImage(file) })));
@@ -393,7 +393,7 @@
         recognizedCards = normalizedRecognizedCards(recognizedBatch, shipping);
         renderPurchase();
         recalc();
-        $('upload-status').textContent = `识别完成：${recognizedCards.length} 张卡。当前为 GPT 识别初稿，请检查后再确认入库。`;
+        $('upload-status').textContent = `识别完成：${recognizedCards.length} 张卡。当前为 AI 识别初稿，请检查后再确认入库。`;
         toast(`已识别 ${recognizedCards.length} 张卡`);
       } catch (error) {
         $('upload-status').textContent = `识别失败：${error.message}。图片仍然保留，请检查后重试。`;
@@ -499,7 +499,7 @@
       if (!recognizedCards.length) { toast('请先上传并识别采购截图'); return; }
       let savedCardIds = [];
       if (API_BASE) {
-        const response = await apiFetch('/api/batches', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({batch:{subtotalCny:Number($('batch-subtotal').value)||0, shippingCny:Number($('batch-shipping').value)||0, recognitionMethod:'gpt-vision'}, cards:recognizedCards})});
+        const response = await apiFetch('/api/batches', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({batch:{subtotalCny:Number($('batch-subtotal').value)||0, shippingCny:Number($('batch-shipping').value)||0, recognitionMethod:'gemini-vision'}, cards:recognizedCards})});
         if (!response.ok) { toast('入库数据保存失败'); return; }
         const result = await response.json();
         savedCardIds = result.data?.cardIds || [];
