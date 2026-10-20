@@ -273,6 +273,9 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
+    const SECURE_APP_HOST = 'card-ledger-api.443405785.workers.dev';
+    const SECURE_APP_URL = `https://${SECURE_APP_HOST}/`;
+    if (location.hostname === 'talentshao.github.io') location.replace(SECURE_APP_URL);
     const cards = [];
     let activeFilter = 'all';
     let selectedCard = null;
@@ -281,7 +284,7 @@
     let recognizedBatch = null;
     let recognizedCards = [];
     let manualCardRows = [{title:'', series:'', type:'', parallel:'', keywords:'', price:''}];
-    const API_BASE = window.CARD_LEDGER_API_URL || 'https://card-ledger-api.443405785.workers.dev';
+    const API_BASE = window.CARD_LEDGER_API_URL || (location.hostname === SECURE_APP_HOST ? '' : SECURE_APP_URL);
     const USE_GPT_RECOGNITION = true;
     const API_TOKEN = window.CARD_LEDGER_API_TOKEN || localStorage.getItem('cardLedgerApiToken') || '';
     const money = n => `¥${Number(n).toFixed(2)}`;
@@ -290,7 +293,10 @@
     function apiFetch(path, options = {}) {
       const headers = new Headers(options.headers || {});
       if (API_TOKEN) headers.set('Authorization', `Bearer ${API_TOKEN}`);
-      return fetch(`${API_BASE.replace(/\/$/, '')}${path}`, {...options, headers});
+      return fetch(`${API_BASE.replace(/\/$/, '')}${path}`, {...options, headers, credentials: options.credentials || 'include'}).then(response => {
+        if (response.status === 401 && location.hostname === SECURE_APP_HOST) location.replace('/');
+        return response;
+      });
     }
 
     async function loadFromApi() {
