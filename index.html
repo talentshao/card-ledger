@@ -167,6 +167,8 @@
     .keyword { background: var(--gold-soft); color: #915d1b; border-radius: 7px; padding: 6px 8px; font-size: 11px; }
     .detail-actions { display: flex; gap: 9px; margin: 20px 0 16px; }
     .detail-actions button { flex: 1; }
+    .detail-actions .danger { background: #fff1f2; color: #b44e5b; border: 1px solid #f0c8cd; padding: 11px 12px; border-radius: 13px; font-weight: 700; }
+    .detail-actions .danger:active { background: #fbecee; }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(12,20,28,.46); z-index: 30; display: none; align-items: end; justify-content: center; }
     .modal-backdrop.open { display: flex; }
     .modal { width: min(100%, 480px); background: var(--surface); border-radius: 24px 24px 0 0; padding: 18px 17px calc(17px + env(safe-area-inset-bottom)); max-height: 88dvh; overflow: auto; animation: rise .2s ease-out; }
@@ -207,24 +209,24 @@
         </div>
         <label class="search"><span class="search-icon">⌕</span><input id="search-input" placeholder="搜索球员、系列、关键词、编号" /></label>
         <div class="chips" id="status-chips"><button class="chip active" data-filter="all">全部</button><button class="chip" data-filter="在库">在库</button><button class="chip" data-filter="已售">已售</button><button class="chip" data-filter="待拆分">待拆分</button></div>
-        <div class="section-head"><h2>最近入库</h2><span id="result-count">14 张示例卡</span></div>
+        <div class="section-head"><h2>最近入库</h2><span id="result-count">0 张卡</span></div>
         <div class="card-list" id="inventory-list"></div>
       </div>
 
       <div class="view" id="view-purchase">
         <div class="purchase-head"><div><h2>采购入库</h2><p>支持多张截图合并计算运费</p></div><button class="icon-btn" id="refresh-batch" aria-label="刷新识别">↻</button></div>
-        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，浏览器本地 OCR 后检查结果</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">支持本地 OCR 识别文字；识别后请检查，再确认入库。</div></div>
+        <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，由 GPT 识别订单、卡片和金额</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">GPT 会先生成识别初稿；请检查每张卡和运费后，再确认入库。</div></div>
         <div id="purchase-orders"></div>
-        <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥177.02</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="159.02" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="18.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" value="14 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
+        <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥0.00</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="0.00" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="0.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" id="batch-card-count" value="0 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
       </div>
 
       <div class="view" id="view-sales"><div class="hero"><div class="hero-copy"><h2>批量售出</h2><p>搜索卡片，勾选后填写售出价和运费</p></div><button class="primary" data-nav="inventory">看卡库</button></div><label class="search sale-search"><span class="search-icon">⌕</span><input id="sale-search" placeholder="搜索球员、系列、关键词、编号" /></label><div class="sale-tools"><span id="sale-result-count">可售 13 张</span><button class="select-all" id="select-all-sale">全选当前结果</button></div><div class="sale-list" id="sale-list"></div><div class="sale-summary"><div class="sale-summary-top"><span>已选择卡片</span><b id="sale-selected-count">0 张</b></div><div class="sale-summary-grid"><label>本次运费<input id="sale-shipping" type="number" step="0.01" value="0.00" inputmode="decimal" /></label><label>平均每张运费<input id="sale-per-card" value="¥0.00" disabled /></label></div><div class="sale-profit"><span>预计总盈亏</span><b id="sale-profit">¥0.00</b></div><button class="primary" id="confirm-sale">确认售出</button></div></div>
-      <div class="view" id="view-more"><div class="hero"><div class="hero-copy"><h2>更多</h2><p>管理你的卡库偏好</p></div></div><div class="more-panel"><h2>当前原型范围</h2><p>这一版先验证手机端录入、合并运费、单张成本、搜索、筛选和编辑体验。确认交互顺手后，再连接 GPT 和服务端。</p></div></div>
+      <div class="view" id="view-more"><div class="hero"><div class="hero-copy"><h2>更多</h2><p>管理你的卡库偏好</p></div></div><div class="more-panel"><h2>当前功能</h2><p>采购截图由服务端 GPT 识别，结果会先作为识别初稿展示。确认后才会写入卡库；入库卡片可以继续编辑或删除。</p></div></div>
 
       <div class="view" id="view-detail">
         <button class="detail-back" id="back-to-list">‹ 返回卡库</button>
         <div class="detail-hero"><div class="detail-thumb"><b id="detail-initials">AM</b><span>ONE-OF-ONE VIEW</span></div><div><h2 id="detail-title">Aaron Wan-Bissaka</h2><p id="detail-sub">2026 Panini Prizm FIFA<br>世界杯 · 枫叶折 · /86</p><div class="detail-price" id="detail-cost">¥6.90 / 张</div></div></div>
-        <div class="detail-actions"><button class="primary" id="edit-card">编辑这张卡</button><button class="secondary" id="mark-sold">加入售出清单</button></div>
+        <div class="detail-actions"><button class="primary" id="edit-card">编辑这张卡</button><button class="secondary" id="mark-sold">加入售出清单</button><button class="danger" id="delete-card">删除卡片</button></div>
         <div class="detail-section"><h3>卡片信息</h3><div class="info-grid" id="detail-info"></div></div>
         <div class="detail-section"><h3>关键词</h3><div class="keyword-cloud" id="detail-keywords"></div></div>
         <div class="detail-section"><h3>成本拆解</h3><div class="info-grid" id="detail-cost-info"></div></div>
@@ -237,32 +239,16 @@
   <div class="modal-backdrop" id="edit-modal"><form class="modal" id="edit-form"><div class="modal-head"><div><div class="eyebrow">EDIT CARD</div><h2>编辑卡片信息</h2></div><button type="button" class="icon-btn" id="close-modal">×</button></div><div class="form-grid"><div class="image-edit"><div class="edit-preview" id="edit-preview">AM</div><div><b>卡片照片</b><p>上传正面照片，后续还可以补充背面照片。</p><label class="upload-label" for="card-image-input">选择图片</label><input id="card-image-input" type="file" accept="image/*" hidden /></div></div><div class="form-field"><label>球员/人物名称</label><input name="title" required /></div><div class="form-field"><label>系列与年份</label><input name="series" /></div><div class="form-two"><div class="form-field"><label>卡片类型</label><input name="type" /></div><div class="form-field"><label>平行/编号</label><input name="parallel" /></div></div><div class="form-field"><label>关键词（用逗号分隔）</label><input name="keywords" /></div><div class="form-two"><div class="form-field"><label>商品金额</label><input name="price" type="number" step="0.01" /></div><div class="form-field"><label>分摊运费</label><input name="shipping" type="number" step="0.01" /></div></div><div class="form-field"><label>备注</label><textarea name="notes" rows="3" placeholder="例如：卡品如图、需要补拍背面"></textarea></div><button class="primary" type="submit">保存修改</button></div></form></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
-    const cards = [
-      {id:1, image: 'MU', title:'Murillo', series:'2023-24 Panini Impeccable', type:'RC · 闪版', parallel:'低编 /8', keywords:['穆里略','英超','森林','新秀','闪版','/8'], price:110, shipping:12.45, cost:122.45, status:'在库'},
-      {id:2, image: 'BN', title:'Bilal Nadir', series:'2024 Topps Chrome', type:'RC · 紫碎点折', parallel:'折射 /299', keywords:['比拉尔·纳迪尔','马赛','欧联','RC','紫碎点折','/299'], price:3.05, shipping:.35, cost:3.40, status:'在库'},
-      {id:3, image: 'MG', title:'Mason Greenwood', series:'2021 Topps Chrome', type:'粉折', parallel:'折射 /175', keywords:['梅森·格林伍德','曼联','欧冠','粉折','/175'], price:11, shipping:1.24, cost:12.24, status:'在库'},
-      {id:4, image: 'AW', title:'Aaron Wan-Bissaka', series:'2026 Panini Prizm FIFA', type:'枫叶折', parallel:'折射 /86', keywords:['万比萨卡','世界杯','枫叶折','/86'], price:6.2, shipping:.70, cost:6.90, status:'在库'},
-      {id:5, image: 'AP', title:'Andreas Pereira', series:'2023-24 Panini Prizm', type:'紫白折', parallel:'折射 /92', keywords:['安德烈亚斯·佩雷拉','富勒姆','英超','/92'], price:3.06, shipping:.35, cost:3.41, status:'在库'},
-      {id:6, image: 'ZY', title:'严子怡', series:'FING Genesis · 启示录', type:'RS · 特卡', parallel:'折射', keywords:['FING Genesis','严子怡','启示录','RS','新秀','特卡'], price:5, shipping:.57, cost:5.57, status:'在库'},
-      {id:7, image: 'WJ', title:'王久香', series:'FING Genesis', type:'Star Watch · 特卡', parallel:'折射', keywords:['王久香','跨栏','Star Watch','FING Genesis'], price:1, shipping:.11, cost:1.11, status:'已售'},
-      {id:8, image: 'SV', title:'Sepp Van Den Berg', series:'2026 Topps', type:'蓝折', parallel:'折射 /150', keywords:['范登贝尔赫','布伦特福德','英超','蓝折','/150'], price:3.06, shipping:.35, cost:3.41, status:'在库'},
-      {id:9, image: 'MV', title:'Marco Verratti', series:'2023 Topps', type:'粉碎点折', parallel:'折射', keywords:['维拉蒂','大巴黎','欧冠','粉碎点折'], price:1, shipping:.11, cost:1.11, status:'在库'},
-      {id:10, image: 'AO', title:'Ali Olwan', series:'2026 Panini Prizm FIFA', type:'RC · 橙脉冲折', parallel:'折射 /99', keywords:['阿里·奥尔万','约旦','世界杯','RC','/99'], price:3.15, shipping:.36, cost:3.51, status:'在库'},
-      {id:11, image: 'YB', title:'Yassine Bounou', series:'2026 Panini Prizm FIFA', type:'紫龙鳞折', parallel:'折射 /299', keywords:['布努','摩洛哥','世界杯','/299'], price:3.11, shipping:.35, cost:3.46, status:'在库'},
-      {id:12, image: 'AO', title:'Azzedine Ounahi', series:'2026 Panini Prizm FIFA', type:'紫龙鳞折', parallel:'折射 /299', keywords:['欧纳希','摩洛哥','世界杯','/299'], price:3.11, shipping:.35, cost:3.46, status:'待拆分'},
-      {id:13, image: 'OB', title:'Oliver Baumann', series:'2026 Panini Prizm FIFA', type:'紫龙鳞折', parallel:'折射 /299', keywords:['奥利弗·鲍曼','德国','世界杯','/299'], price:3.22, shipping:.36, cost:3.58, status:'在库'},
-      {id:14, image: 'MA', title:'Manuel Akanji', series:'2025-26 Panini Donruss Optic FIFA', type:'橙折', parallel:'折射 /99', keywords:['阿坎吉','瑞士','世界杯','/99'], price:3.06, shipping:.35, cost:3.41, status:'在库'}
-    ];
+    const cards = [];
     let activeFilter = 'all';
-    let selectedCard = cards[3];
+    let selectedCard = null;
     let saleSelection = new Set();
     let purchaseImageUrls = [];
     let recognizedBatch = null;
     let recognizedCards = [];
     const API_BASE = window.CARD_LEDGER_API_URL || 'https://card-ledger-api.443405785.workers.dev';
-    const USE_GPT_RECOGNITION = Boolean(window.CARD_LEDGER_USE_GPT);
+    const USE_GPT_RECOGNITION = true;
     const API_TOKEN = window.CARD_LEDGER_API_TOKEN || localStorage.getItem('cardLedgerApiToken') || '';
     const money = n => `¥${Number(n).toFixed(2)}`;
     const $ = id => document.getElementById(id);
@@ -279,11 +265,9 @@
         const response = await apiFetch('/api/cards');
         const result = await response.json();
         if (!response.ok || !result.data) throw new Error(result.error || '读取卡库失败');
-        if (result.data.length) {
-          cards.splice(0, cards.length, ...result.data.map(card => ({...card, image: (card.title || 'CARD').slice(0, 2).toUpperCase()})));
-          selectedCard = cards[0] || null;
-          renderInventory(); renderPurchase(); renderSales();
-        }
+        cards.splice(0, cards.length, ...result.data.map(card => ({...card, image: (card.title || 'CARD').slice(0, 2).toUpperCase()})));
+        selectedCard = cards[0] || null;
+        renderInventory(); renderPurchase(); renderSales();
       } catch (error) {
         toast(`后端暂不可用：${error.message}`);
       }
@@ -305,7 +289,7 @@
     function renderInventory() {
       const q = ($('search-input').value || '').trim().toLowerCase();
       const visible = cards.filter(c => (activeFilter === 'all' || c.status === activeFilter) && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q)));
-      $('inventory-list').innerHTML = visible.length ? visible.map(cardRow).join('') : '<div class="empty-state">没有找到匹配的卡片</div>';
+      $('inventory-list').innerHTML = visible.length ? visible.map(cardRow).join('') : '<div class="empty-state">还没有入库卡片，先去采购页上传截图吧</div>';
       $('result-count').textContent = `${visible.length} 张卡`;
       renderSummary();
     }
@@ -322,11 +306,7 @@
         }).join('');
         return;
       }
-      const sampleOrders = [
-        {seller:'浩行拍卖精品', cards:cards.slice(0,7), badge:'示例数据'},
-        {seller:'浩行天下精品', cards:cards.slice(7), badge:'示例数据'},
-      ];
-      $('purchase-orders').innerHTML = sampleOrders.map((order, index) => `<div class="order-group"><div class="order-group-head"><div><h3>订单 ${String(index + 1).padStart(2, '0')} · ${order.seller}</h3><p>${order.cards.length} 张卡 · 商品小计 ${money(order.cards.reduce((sum, c) => sum + c.price, 0))}</p></div><span class="order-badge">${order.badge}</span></div>${miniRows(order.cards)}</div>`).join('');
+      $('purchase-orders').innerHTML = '<div class="empty-state">上传采购截图后，这里会显示 GPT 识别初稿</div>';
     }
 
     function dataUrlFor(file) {
@@ -342,7 +322,10 @@
       const rows = [];
       batch.orders.forEach((order, orderIndex) => order.items.forEach(item => {
         const count = Math.max(1, (Number(item.cardCount) || 1) * (Number(item.quantity) || 1));
-        for (let index = 0; index < count; index += 1) rows.push({ orderIndex, item, title: item.title || '待确认卡片', price: Number(item.linePriceCny) || 0 });
+        const setPrice = Number(item.linePriceCny) || 0;
+        const cardCount = Math.max(1, Number(item.cardCount) || 1);
+        const perCardPrice = setPrice / cardCount;
+        for (let index = 0; index < count; index += 1) rows.push({ orderIndex, item, title: item.title || '待确认卡片', price: perCardPrice });
       }));
       const subtotal = rows.reduce((sum, row) => sum + row.price, 0);
       let allocated = 0;
@@ -394,26 +377,14 @@
     }
 
     async function recognizePurchaseImages(files) {
-      $('upload-status').textContent = USE_GPT_RECOGNITION ? '正在识别截图中的订单、球员、系列和金额，请稍候…' : '正在本地 OCR 识别图片文字，第一次加载中文语言包可能需要一点时间…';
+      $('upload-status').textContent = '正在通过 GPT 识别截图中的订单、球员、系列、关键词和金额，请稍候…';
       try {
-        let data;
-        if (USE_GPT_RECOGNITION && API_BASE) {
-          const images = await Promise.all(files.map(async file => ({ name: file.name, dataUrl: await dataUrlFor(file) })));
-          const response = await fetch(`${API_BASE.replace(/\/$/, '')}/api/recognize-purchase`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({images}) });
-          const result = await response.json();
-          if (!response.ok || !result.data) throw new Error(result.error || '识别失败');
-          data = result.data;
-        } else {
-          if (!window.Tesseract) throw new Error('OCR 组件加载失败，请检查网络后重试');
-          const documents = [];
-          for (let index = 0; index < files.length; index += 1) {
-            const result = await window.Tesseract.recognize(files[index], 'chi_sim+eng', { logger: message => { if (message.status === 'recognizing text') $('upload-status').textContent = `正在识别第 ${index + 1}/${files.length} 张截图：${Math.round((message.progress || 0) * 100)}%`; } });
-            documents.push(parseOcrDocument(result.data.text, index));
-          }
-          const subtotal = documents.reduce((sum, order) => sum + (Number(order.subtotalCny) || 0), 0);
-          const shipping = documents.find(order => Number.isFinite(order.shippingCny))?.shippingCny ?? null;
-          data = { orders: documents, purchaseSubtotalCny: subtotal, shippingCny: shipping, paidCny: null, notes: ['当前使用浏览器本地 OCR，金额会自动提取；球员、系列和关键词请在入库前检查。'] };
-        }
+        if (!API_BASE) throw new Error('服务端地址未配置');
+        const images = await Promise.all(files.map(async file => ({ name: file.name, dataUrl: await compressImage(file) })));
+        const response = await apiFetch('/api/recognize-purchase', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({images}) });
+        const result = await response.json();
+        if (!response.ok || !result.data) throw new Error(result.error || '识别失败');
+        const data = result.data;
         recognizedBatch = data;
         const subtotal = Number(recognizedBatch.purchaseSubtotalCny ?? recognizedBatch.orders.reduce((sum, order) => sum + (Number(order.subtotalCny) || 0), 0));
         const shipping = Number(recognizedBatch.shippingCny) || 0;
@@ -422,7 +393,7 @@
         recognizedCards = normalizedRecognizedCards(recognizedBatch, shipping);
         renderPurchase();
         recalc();
-        $('upload-status').textContent = `识别完成：${recognizedCards.length} 张卡。当前为 OCR 初稿，请检查后再确认入库。`;
+        $('upload-status').textContent = `识别完成：${recognizedCards.length} 张卡。当前为 GPT 识别初稿，请检查后再确认入库。`;
         toast(`已识别 ${recognizedCards.length} 张卡`);
       } catch (error) {
         $('upload-status').textContent = `识别失败：${error.message}。图片仍然保留，请检查后重试。`;
@@ -477,6 +448,7 @@
         recognizedCards = normalizedRecognizedCards(recognizedBatch, shipping);
         renderPurchase();
       }
+      $('batch-card-count').value = `${recognizedCards.length} 张`;
       $('batch-total-cost').textContent = money(subtotal + shipping); toast('已重新计算本批次成本');
     }
     document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => showView(el.dataset.nav)));
@@ -485,6 +457,22 @@
     $('inventory-list').addEventListener('click', e => { const row=e.target.closest('[data-card-id]'); if(row) showDetail(cards.find(c=>String(c.id) === String(row.dataset.cardId))); });
     $('back-to-list').addEventListener('click', () => showView('inventory'));
     $('edit-card').addEventListener('click', openEdit);
+    $('delete-card').addEventListener('click', async () => {
+      if (!selectedCard) return;
+      const deletedId = String(selectedCard.id);
+      if (!window.confirm(`确定删除「${selectedCard.title}」吗？删除后无法恢复。`)) return;
+      if (API_BASE) {
+        const response = await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}`, {method:'DELETE'});
+        if (!response.ok) { toast('删除卡片失败'); return; }
+      }
+      const index = cards.findIndex(card => String(card.id) === deletedId);
+      if (index >= 0) cards.splice(index, 1);
+      selectedCard = cards[0] || null;
+      saleSelection.delete(deletedId);
+      renderInventory(); renderSales();
+      showView('inventory');
+      toast('卡片已删除');
+    });
     $('close-modal').addEventListener('click', () => $('edit-modal').classList.remove('open'));
     $('edit-modal').addEventListener('click', e => { if(e.target === $('edit-modal')) $('edit-modal').classList.remove('open'); });
     function compressImage(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => { const image = new Image(); image.onload = () => { const scale = Math.min(1, 900 / Math.max(image.naturalWidth, image.naturalHeight)); const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale)); canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', .74)); }; image.onerror = reject; image.src = reader.result; }; reader.readAsDataURL(file); }); }
@@ -511,7 +499,7 @@
       if (!recognizedCards.length) { toast('请先上传并识别采购截图'); return; }
       let savedCardIds = [];
       if (API_BASE) {
-        const response = await apiFetch('/api/batches', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({batch:{subtotalCny:Number($('batch-subtotal').value)||0, shippingCny:Number($('batch-shipping').value)||0, recognitionMethod:API_BASE ? 'ocr-or-gpt' : 'manual'}, cards:recognizedCards})});
+        const response = await apiFetch('/api/batches', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({batch:{subtotalCny:Number($('batch-subtotal').value)||0, shippingCny:Number($('batch-shipping').value)||0, recognitionMethod:'gpt-vision'}, cards:recognizedCards})});
         if (!response.ok) { toast('入库数据保存失败'); return; }
         const result = await response.json();
         savedCardIds = result.data?.cardIds || [];
@@ -536,3 +524,4 @@
   </script>
 </body>
 </html>
+
