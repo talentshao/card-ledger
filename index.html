@@ -109,6 +109,31 @@
     .batch-actions { display: flex; gap: 9px; margin-top: 14px; }
     .secondary { flex: 1; background: #fff; color: var(--ink); border: 1px solid var(--line); padding: 11px 12px; border-radius: 13px; font-weight: 700; }
     .batch-actions .primary { flex: 1.4; }
+    .manual-order { margin-top: 15px; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+    .manual-order-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 13px; }
+    .manual-order-head h3 { font-size: 15px; }
+    .manual-order-head p { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 4px; }
+    .manual-order .order-badge { flex: 0 0 auto; color: #75603d; background: #f7f1e7; }
+    .manual-card-list { display: grid; gap: 11px; }
+    .manual-card-row { padding: 12px; border-radius: 14px; background: #fafbfc; border: 1px solid #e7ebef; }
+    .manual-card-row-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .manual-card-row-head b { font-size: 12px; }
+    .manual-remove { color: #b44e5b; background: transparent; padding: 3px 0; font-size: 11px; }
+    .manual-card-row .form-grid { gap: 9px; }
+    .manual-card-row .form-field { gap: 4px; }
+    .manual-card-row .form-field label { font-size: 10px; }
+    .manual-card-row .form-field input { padding: 9px; font-size: 13px; }
+    .manual-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 9px; padding-top: 9px; border-top: 1px solid #e7ebef; color: var(--muted); font-size: 10px; }
+    .manual-card-foot b { color: #9a641e; font-size: 12px; white-space: nowrap; }
+    .manual-card-tools { display: flex; justify-content: space-between; align-items: center; gap: 9px; margin-top: 11px; }
+    .manual-card-tools .secondary { flex: 0 1 auto; padding: 9px 11px; font-size: 12px; }
+    .manual-card-count { color: var(--muted); font-size: 11px; }
+    .manual-summary { margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .manual-summary div { min-width: 0; }
+    .manual-summary span { display: block; color: var(--muted); font-size: 10px; margin-bottom: 4px; }
+    .manual-summary b { display: block; font-size: 13px; white-space: nowrap; }
+    .manual-summary b.total { color: #9a641e; }
+    .manual-submit { width: 100%; margin-top: 13px; }
     .mini-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 10px 13px; border-bottom: 1px solid #f0f2f4; }
     .mini-row:last-child { border-bottom: 0; }
     .mini-thumb { width: 42px; height: 50px; border-radius: 7px; background: linear-gradient(150deg, #253548, #97b0b6); color: #fff; display: grid; place-items: end start; padding: 5px; font-size: 10px; font-weight: 800; }
@@ -216,6 +241,14 @@
       <div class="view" id="view-purchase">
         <div class="purchase-head"><div><h2>采购入库</h2><p>支持多张截图合并计算运费</p></div><button class="icon-btn" id="refresh-batch" aria-label="刷新识别">↻</button></div>
         <div class="dropzone" id="dropzone"><div class="upload-mark">＋</div><b>上传采购截图</b><span>可一次选择多张图片，由 AI 识别订单、卡片和金额</span><input id="image-input" type="file" accept="image/*" multiple hidden /><div id="upload-preview" class="upload-preview"></div><div id="upload-status" class="upload-status">AI 会先生成识别初稿；请检查每张卡和运费后，再确认入库。</div></div>
+        <section class="manual-order" aria-labelledby="manual-order-title">
+          <div class="manual-order-head"><div><h3 id="manual-order-title">不想截图？手动录入一单</h3><p>一单可以添加多张卡，运费会按照每张卡的商品金额自动分摊。</p></div><span class="order-badge">无需 AI</span></div>
+          <div class="manual-card-list" id="manual-card-list"></div>
+          <div class="manual-card-tools"><button class="secondary" id="add-manual-card" type="button">＋ 添加一张卡</button><span class="manual-card-count" id="manual-card-count">1 张卡</span></div>
+          <div class="form-field" style="margin-top:12px"><label for="manual-shipping">本单总运费</label><input id="manual-shipping" type="number" min="0" step="0.01" value="0.00" inputmode="decimal" placeholder="没有运费就填 0" /></div>
+          <div class="manual-summary"><div><span>商品总额</span><b id="manual-subtotal">¥0.00</b></div><div><span>整单运费</span><b id="manual-shipping-total">¥0.00</b></div><div><span>入库总成本</span><b class="total" id="manual-total-cost">¥0.00</b></div></div>
+          <button class="primary manual-submit" id="save-manual-order" type="button">计算成本并确认入库</button>
+        </section>
         <div id="purchase-orders"></div>
         <div class="batch-total"><div class="batch-total-top"><h3>本批次成本计算</h3><strong id="batch-total-cost">¥0.00</strong></div><div class="calc-grid"><label>商品总额<input class="money-input" id="batch-subtotal" value="0.00" inputmode="decimal" /></label><label>合并运费<input class="money-input" id="batch-shipping" value="0.00" inputmode="decimal" /></label><label>卡片数量<input class="money-input" id="batch-card-count" value="0 张" disabled /></label></div><div class="batch-actions"><button class="secondary" id="recalc">重新计算</button><button class="primary" id="confirm-batch">确认入库</button></div></div>
       </div>
@@ -247,6 +280,7 @@
     let purchaseImageUrls = [];
     let recognizedBatch = null;
     let recognizedCards = [];
+    let manualCardRows = [{title:'', series:'', type:'', parallel:'', keywords:'', price:''}];
     const API_BASE = window.CARD_LEDGER_API_URL || 'https://card-ledger-api.443405785.workers.dev';
     const USE_GPT_RECOGNITION = true;
     const API_TOKEN = window.CARD_LEDGER_API_TOKEN || localStorage.getItem('cardLedgerApiToken') || '';
@@ -295,6 +329,58 @@
     }
     function miniRows(list) {
       return list.map(c => `<div class="mini-row"><div class="mini-thumb">${c.image}</div><div><b>${c.title}</b><p>${c.type} · ${c.parallel}</p></div><div class="mini-price">${money(c.cost)}<small>单张成本</small></div></div>`).join('');
+    }
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+    }
+    function manualShippingShares(shipping) {
+      const subtotal = manualCardRows.reduce((sum, row) => sum + (Number(row.price) || 0), 0);
+      let allocated = 0;
+      return manualCardRows.map((row, index) => {
+        const price = Number(row.price) || 0;
+        const equalShare = manualCardRows.length ? shipping / manualCardRows.length : 0;
+        const share = index === manualCardRows.length - 1 ? Number((shipping - allocated).toFixed(2)) : Number((subtotal ? shipping * price / subtotal : equalShare).toFixed(2));
+        allocated += share;
+        return share;
+      });
+    }
+    function renderManualEntry() {
+      const shippingShares = manualShippingShares(Number($('manual-shipping').value) || 0);
+      $('manual-card-list').innerHTML = manualCardRows.map((row, index) => `<div class="manual-card-row" data-manual-row="${index}">
+        <div class="manual-card-row-head"><b>卡片 ${index + 1}</b>${manualCardRows.length > 1 ? `<button class="manual-remove" type="button" data-remove-manual="${index}">删除</button>` : ''}</div>
+        <div class="form-grid">
+          <div class="form-field"><label>球员/人物名称 *</label><input data-manual-field="title" value="${escapeHtml(row.title)}" required placeholder="例如 Rodri" /></div>
+          <div class="form-two"><div class="form-field"><label>系列与年份</label><input data-manual-field="series" value="${escapeHtml(row.series)}" placeholder="例如 2026 Topps" /></div><div class="form-field"><label>卡片类型</label><input data-manual-field="type" value="${escapeHtml(row.type)}" placeholder="例如 Base" /></div></div>
+          <div class="form-two"><div class="form-field"><label>平行/编号</label><input data-manual-field="parallel" value="${escapeHtml(row.parallel)}" placeholder="例如 折射 / /99" /></div><div class="form-field"><label>商品金额 *</label><input data-manual-field="price" type="number" min="0" step="0.01" inputmode="decimal" value="${escapeHtml(row.price)}" required placeholder="0.00" /></div></div>
+          <div class="form-field"><label>关键词（用逗号分隔）</label><input data-manual-field="keywords" value="${escapeHtml(row.keywords)}" placeholder="例如 英超, 曼城, 特卡" /></div>
+        </div>
+        <div class="manual-card-foot"><span>预计分摊运费 <b data-manual-shipping="${index}">${money(shippingShares[index] || 0)}</b></span><span>预计单张成本 <b data-manual-cost="${index}">${money((Number(row.price) || 0) + (shippingShares[index] || 0))}</b></span></div>
+      </div>`).join('');
+      $('manual-card-count').textContent = `${manualCardRows.length} 张卡`;
+      updateManualSummary();
+    }
+    function updateManualSummary() {
+      const subtotal = manualCardRows.reduce((sum, row) => sum + (Number(row.price) || 0), 0);
+      const shipping = Number($('manual-shipping').value) || 0;
+      const shippingShares = manualShippingShares(shipping);
+      $('manual-subtotal').textContent = money(subtotal);
+      $('manual-shipping-total').textContent = money(shipping);
+      $('manual-total-cost').textContent = money(subtotal + shipping);
+      shippingShares.forEach((share, index) => {
+        const shippingLabel = document.querySelector(`[data-manual-shipping="${index}"]`);
+        const costLabel = document.querySelector(`[data-manual-cost="${index}"]`);
+        if (shippingLabel) shippingLabel.textContent = money(share);
+        if (costLabel) costLabel.textContent = money((Number(manualCardRows[index].price) || 0) + share);
+      });
+    }
+    function normalizedManualCards(shipping) {
+      const shippingShares = manualShippingShares(shipping);
+      return manualCardRows.map((row, index) => {
+        const price = Number(row.price) || 0;
+        const share = shippingShares[index] || 0;
+        const title = row.title.trim();
+        return { image: title.slice(0, 2).toUpperCase() || 'CARD', title, series: row.series.trim() || '待填写系列', type: row.type.trim() || '待填写类型', parallel: row.parallel.trim() || '未填写', keywords: row.keywords.split(/[,，]/).map(keyword => keyword.trim()).filter(Boolean), price, shipping: share, cost: Number((price + share).toFixed(2)), status: '在库', orderIndex: 0 };
+      });
     }
     function renderPurchase() {
       if (recognizedBatch) {
@@ -479,6 +565,53 @@
     $('card-image-input').addEventListener('change', async e => { const file = e.target.files[0]; if(!file) return; try { const dataUrl = await compressImage(file); selectedCard.imageData = dataUrl; $('edit-preview').innerHTML = `<img src="${dataUrl}" alt="${selectedCard.title} 卡片照片" />`; toast('卡片图片已压缩并更新'); } catch { toast('图片处理失败'); } });
     $('edit-form').addEventListener('submit', async e => { e.preventDefault(); const f=e.target; Object.assign(selectedCard, {title:f.title.value, series:f.series.value, type:f.type.value, parallel:f.parallel.value, keywords:f.keywords.value.split(',').map(x=>x.trim()).filter(Boolean), price:Number(f.price.value)||0, shipping:Number(f.shipping.value)||0}); selectedCard.cost=selectedCard.price+selectedCard.shipping; if(API_BASE){ const response=await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({card:selectedCard})}); if(!response.ok){ toast('保存到服务端失败'); return; } if(selectedCard.imageData){ await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}/image`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dataUrl:selectedCard.imageData})}); } } $('edit-modal').classList.remove('open'); renderInventory(); showDetail(selectedCard); toast('卡片信息已保存'); });
     $('mark-sold').addEventListener('click', () => { if(selectedCard.status === '已售'){ selectedCard.status='在库'; showDetail(selectedCard); renderInventory(); renderSales(); toast('已恢复为在库'); } else { saleSelection.add(String(selectedCard.id)); showView('sales'); renderSales(); toast('已加入售出清单，请填写售出价'); } });
+    $('manual-card-list').addEventListener('input', e => {
+      const input = e.target.closest('[data-manual-field]');
+      const row = e.target.closest('[data-manual-row]');
+      if (!input || !row) return;
+      manualCardRows[Number(row.dataset.manualRow)][input.dataset.manualField] = input.value;
+      updateManualSummary();
+    });
+    $('manual-card-list').addEventListener('click', e => {
+      const remove = e.target.closest('[data-remove-manual]');
+      if (!remove) return;
+      manualCardRows.splice(Number(remove.dataset.removeManual), 1);
+      renderManualEntry();
+    });
+    $('add-manual-card').addEventListener('click', () => {
+      manualCardRows.push({title:'', series:'', type:'', parallel:'', keywords:'', price:''});
+      renderManualEntry();
+      const lastTitle = $('manual-card-list').querySelector('[data-manual-row]:last-child [data-manual-field="title"]');
+      lastTitle?.focus();
+    });
+    $('manual-shipping').addEventListener('input', updateManualSummary);
+    $('save-manual-order').addEventListener('click', async () => {
+      const invalid = manualCardRows.some(row => !row.title.trim() || row.price === '' || Number(row.price) < 0 || !Number.isFinite(Number(row.price)));
+      if (invalid) { toast('请填写每张卡的名称和商品金额'); return; }
+      const shipping = Math.max(0, Number($('manual-shipping').value) || 0);
+      const manualCards = normalizedManualCards(shipping);
+      const subtotal = manualCards.reduce((sum, card) => sum + card.price, 0);
+      let savedCardIds = [];
+      try {
+        if (API_BASE) {
+          const response = await apiFetch('/api/batches', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({batch:{subtotalCny:subtotal, shippingCny:shipping, recognitionMethod:'manual'}, cards:manualCards})});
+          if (!response.ok) throw new Error('服务端保存失败');
+          const result = await response.json();
+          savedCardIds = result.data?.cardIds || [];
+        }
+      } catch (error) {
+        toast(`手动录入失败：${error.message}`);
+        return;
+      }
+      let nextId = cards.reduce((max, card) => typeof card.id === 'number' ? Math.max(max, card.id) : max, 0) + 1;
+      manualCards.forEach((card, index) => cards.push({...card, id:savedCardIds[index] || nextId++}));
+      manualCardRows = [{title:'', series:'', type:'', parallel:'', keywords:'', price:''}];
+      $('manual-shipping').value = '0.00';
+      renderManualEntry();
+      renderInventory(); renderSales();
+      toast(`已手动录入一单，共 ${manualCards.length} 张卡`);
+      showView('inventory');
+    });
     $('dropzone').addEventListener('click', () => $('image-input').click());
     $('image-input').addEventListener('change', e => {
       purchaseImageUrls.forEach(url => URL.revokeObjectURL(url));
@@ -520,7 +653,7 @@
     $('sale-list').addEventListener('input', e => { const priceInput=e.target.closest('[data-sale-price]'); if(!priceInput)return; const card=cards.find(c=>String(c.id)===String(priceInput.dataset.salePrice)); if(card) { card.soldPrice = priceInput.value === '' ? undefined : Number(priceInput.value); updateSaleSummary(); } });
     $('select-all-sale').addEventListener('click', () => { const q=($('sale-search').value || '').trim().toLowerCase(); const visible=cards.filter(c => c.status === '在库' && (!q || [c.title,c.series,c.type,c.parallel,...c.keywords].join(' ').toLowerCase().includes(q))); const allSelected=visible.length && visible.every(c=>saleSelection.has(String(c.id))); visible.forEach(c=>allSelected?saleSelection.delete(String(c.id)):saleSelection.add(String(c.id))); renderSales(); });
     $('confirm-sale').addEventListener('click', async () => { const selected=cards.filter(c=>saleSelection.has(String(c.id))); if(!selected.length){ toast('请先选择要售出的卡片'); return; } if(selected.some(c=>!Number.isFinite(Number(c.soldPrice)))){ toast('请先填写每张卡的售出价'); return; } const shipping=Number($('sale-shipping').value)||0; const perCard=shipping/selected.length; if(API_BASE){ const response=await apiFetch('/api/sales', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({cards:selected.map(c=>({id:c.id, soldPrice:c.soldPrice, saleShipping:Number(perCard.toFixed(4))}))})}); if(!response.ok){ toast('售出记录保存失败'); return; } } selected.forEach(c=>{ c.status='已售'; c.saleShipping=Number(perCard.toFixed(4)); }); saleSelection.clear(); $('sale-shipping').value='0.00'; renderSales(); renderInventory(); toast(`已售出 ${selected.length} 张卡，盈亏已记录`); });
-    renderInventory(); renderPurchase(); renderSales(); loadFromApi();
+    renderInventory(); renderPurchase(); renderManualEntry(); renderSales(); loadFromApi();
   </script>
 </body>
 </html>
