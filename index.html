@@ -470,7 +470,10 @@
         const response = await apiFetch('/api/recognize-purchase', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({images}) });
         const result = await response.json();
         if (!response.ok || !result.data) throw new Error(result.error || '识别失败');
-        const data = result.data;
+        const data = result.data && typeof result.data === 'object' ? result.data : {};
+        if (!Array.isArray(data.orders) || !data.orders.length) {
+          throw new Error('识别结果缺少订单明细，请重试或使用手动录入');
+        }
         recognizedBatch = data;
         const subtotal = Number(recognizedBatch.purchaseSubtotalCny ?? recognizedBatch.orders.reduce((sum, order) => sum + (Number(order.subtotalCny) || 0), 0));
         const shipping = Number(recognizedBatch.shippingCny) || 0;
