@@ -212,6 +212,15 @@
     .form-field label { color: var(--muted); font-size: 11px; }
     .form-field input, .form-field textarea, .form-field select { width: 100%; border: 1px solid var(--line); border-radius: 11px; padding: 11px; color: var(--ink); outline: none; background: #fcfdfe; font-size: 14px; }
     .form-field input:focus, .form-field textarea:focus, .form-field select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(230,170,85,.14); }
+    .keyword-editor { display: grid; gap: 8px; }
+    .keyword-list { display: flex; flex-wrap: wrap; gap: 7px; min-height: 25px; }
+    .keyword-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px 6px 10px; border-radius: 999px; background: var(--gold-soft); color: #915d1b; font-size: 11px; font-weight: 700; }
+    .keyword-chip button { width: 18px; height: 18px; padding: 0; border-radius: 50%; background: rgba(145,93,27,.12); color: inherit; font-size: 14px; line-height: 16px; }
+    .keyword-chip button:active { background: rgba(145,93,27,.25); }
+    .keyword-add-row { display: flex; gap: 7px; align-items: center; }
+    .keyword-add-row input { flex: 1; min-width: 0; }
+    .keyword-add { flex: 0 0 auto; padding: 11px 13px; border-radius: 11px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; }
+    .keyword-empty { color: var(--muted); font-size: 11px; padding: 4px 0; }
     .form-two { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
     .toast { position: fixed; z-index: 50; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--ink); color: #fff; padding: 11px 15px; border-radius: 12px; font-size: 12px; opacity: 0; pointer-events: none; transition: .2s ease; white-space: nowrap; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -269,7 +278,7 @@
     <nav class="bottom-nav" aria-label="主导航"><button class="nav-item active" data-nav="inventory"><span class="nav-icon">▦</span><span>卡库</span></button><button class="nav-item" data-nav="purchase"><span class="nav-icon">＋</span><span>采购</span></button><button class="nav-item" data-nav="sales"><span class="nav-icon">↗</span><span>销售</span></button><button class="nav-item" data-nav="more"><span class="nav-icon">⋯</span><span>更多</span></button></nav>
   </main>
 
-  <div class="modal-backdrop" id="edit-modal"><form class="modal" id="edit-form"><div class="modal-head"><div><div class="eyebrow">EDIT CARD</div><h2>编辑卡片信息</h2></div><button type="button" class="icon-btn" id="close-modal">×</button></div><div class="form-grid"><div class="image-edit"><div class="edit-preview" id="edit-preview">AM</div><div><b>卡片照片</b><p>上传正面照片，后续还可以补充背面照片。</p><label class="upload-label" for="card-image-input">选择图片</label><input id="card-image-input" type="file" accept="image/*" hidden /></div></div><div class="form-field"><label>球员/人物名称</label><input name="title" required /></div><div class="form-field"><label>系列与年份</label><input name="series" /></div><div class="form-two"><div class="form-field"><label>卡片类型</label><input name="type" /></div><div class="form-field"><label>平行/编号</label><input name="parallel" /></div></div><div class="form-field"><label>关键词（用逗号分隔）</label><input name="keywords" /></div><div class="form-two"><div class="form-field"><label>商品金额</label><input name="price" type="number" step="0.01" /></div><div class="form-field"><label>分摊运费</label><input name="shipping" type="number" step="0.01" /></div></div><div class="form-field"><label>备注</label><textarea name="notes" rows="3" placeholder="例如：卡品如图、需要补拍背面"></textarea></div><button class="primary" type="submit">保存修改</button></div></form></div>
+  <div class="modal-backdrop" id="edit-modal"><form class="modal" id="edit-form"><div class="modal-head"><div><div class="eyebrow">EDIT CARD</div><h2>编辑卡片信息</h2></div><button type="button" class="icon-btn" id="close-modal">×</button></div><div class="form-grid"><div class="image-edit"><div class="edit-preview" id="edit-preview">AM</div><div><b>卡片照片</b><p>上传正面照片，后续还可以补充背面照片。</p><label class="upload-label" for="card-image-input">选择图片</label><input id="card-image-input" type="file" accept="image/*" hidden /></div></div><div class="form-field"><label>球员/人物名称</label><input name="title" required /></div><div class="form-field"><label>系列与年份</label><input name="series" /></div><div class="form-two"><div class="form-field"><label>卡片类型</label><input name="type" /></div><div class="form-field"><label>平行/编号</label><input name="parallel" /></div></div><div class="form-field"><label>关键词</label><div class="keyword-editor"><div class="keyword-list" id="edit-keyword-list"></div><div class="keyword-add-row"><input id="edit-keyword-input" type="text" placeholder="输入关键词" autocomplete="off" /><button type="button" class="keyword-add" id="add-edit-keyword">添加</button></div></div></div><div class="form-two"><div class="form-field"><label>商品金额</label><input name="price" type="number" step="0.01" /></div><div class="form-field"><label>分摊运费</label><input name="shipping" type="number" step="0.01" /></div></div><div class="form-field"><label>备注</label><textarea name="notes" rows="3" placeholder="例如：卡品如图、需要补拍背面"></textarea></div><button class="primary" type="submit">保存修改</button></div></form></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -279,6 +288,7 @@
     const cards = [];
     let activeFilter = 'all';
     let selectedCard = null;
+    let editingKeywords = [];
     let saleSelection = new Set();
     let purchaseImageUrls = [];
     let recognizedBatch = null;
@@ -530,9 +540,30 @@
       $('detail-cost-info').innerHTML = [['商品金额',money(card.price)],['分摊运费',money(card.shipping)],['单张实际成本',money(card.cost)],['销售状态',card.status],...saleInfo].map(x => `<div class="info-cell"><span>${x[0]}</span><b>${x[1]}</b></div>`).join('');
       showView('detail');
     }
+    function renderEditKeywords() {
+      const list = $('edit-keyword-list');
+      const keywords = Array.isArray(editingKeywords) ? editingKeywords : [];
+      list.innerHTML = keywords.length ? keywords.map((keyword, index) => `<span class="keyword-chip"><span>${escapeHtml(keyword)}</span><button type="button" data-remove-edit-keyword="${index}" aria-label="删除关键词 ${escapeHtml(keyword)}">×</button></span>`).join('') : '<span class="keyword-empty">暂未添加关键词</span>';
+    }
+    function addEditKeyword() {
+      const input = $('edit-keyword-input');
+      const value = input.value.trim();
+      if (!value) return;
+      if (editingKeywords.some(keyword => String(keyword).toLowerCase() === value.toLowerCase())) {
+        input.value = '';
+        toast('这个关键词已经存在');
+        return;
+      }
+      editingKeywords = [...editingKeywords, value];
+      input.value = '';
+      renderEditKeywords();
+      input.focus();
+    }
     function openEdit() {
       const f = $('edit-form');
-      f.title.value = selectedCard.title; f.series.value = selectedCard.series; f.type.value = selectedCard.type; f.parallel.value = selectedCard.parallel; f.keywords.value = selectedCard.keywords.join(', '); f.price.value = selectedCard.price; f.shipping.value = selectedCard.shipping; f.notes.value = '';
+      editingKeywords = Array.isArray(selectedCard.keywords) ? [...selectedCard.keywords] : [];
+      f.title.value = selectedCard.title; f.series.value = selectedCard.series; f.type.value = selectedCard.type; f.parallel.value = selectedCard.parallel; f.price.value = selectedCard.price; f.shipping.value = selectedCard.shipping; f.notes.value = '';
+      renderEditKeywords();
       $('edit-preview').innerHTML = selectedCard.imageData ? `<img src="${selectedCard.imageData}" alt="${selectedCard.title} 卡片照片" />` : selectedCard.image;
       $('edit-modal').classList.add('open');
     }
@@ -552,6 +583,14 @@
     $('inventory-list').addEventListener('click', e => { const row=e.target.closest('[data-card-id]'); if(row) showDetail(cards.find(c=>String(c.id) === String(row.dataset.cardId))); });
     $('back-to-list').addEventListener('click', () => showView('inventory'));
     $('edit-card').addEventListener('click', openEdit);
+    $('add-edit-keyword').addEventListener('click', addEditKeyword);
+    $('edit-keyword-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addEditKeyword(); } });
+    $('edit-keyword-list').addEventListener('click', e => {
+      const button = e.target.closest('[data-remove-edit-keyword]');
+      if (!button) return;
+      editingKeywords = editingKeywords.filter((_, index) => index !== Number(button.dataset.removeEditKeyword));
+      renderEditKeywords();
+    });
     $('delete-card').addEventListener('click', async () => {
       if (!selectedCard) return;
       const deletedId = String(selectedCard.id);
@@ -572,7 +611,7 @@
     $('edit-modal').addEventListener('click', e => { if(e.target === $('edit-modal')) $('edit-modal').classList.remove('open'); });
     function compressImage(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onerror = reject; reader.onload = () => { const image = new Image(); image.onload = () => { const scale = Math.min(1, 900 / Math.max(image.naturalWidth, image.naturalHeight)); const canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale)); canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL('image/jpeg', .74)); }; image.onerror = reject; image.src = reader.result; }; reader.readAsDataURL(file); }); }
     $('card-image-input').addEventListener('change', async e => { const file = e.target.files[0]; if(!file) return; try { const dataUrl = await compressImage(file); selectedCard.imageData = dataUrl; $('edit-preview').innerHTML = `<img src="${dataUrl}" alt="${selectedCard.title} 卡片照片" />`; toast('卡片图片已压缩并更新'); } catch { toast('图片处理失败'); } });
-    $('edit-form').addEventListener('submit', async e => { e.preventDefault(); const f=e.target; Object.assign(selectedCard, {title:f.title.value, series:f.series.value, type:f.type.value, parallel:f.parallel.value, keywords:f.keywords.value.split(',').map(x=>x.trim()).filter(Boolean), price:Number(f.price.value)||0, shipping:Number(f.shipping.value)||0}); selectedCard.cost=selectedCard.price+selectedCard.shipping; if(API_BASE){ const response=await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({card:selectedCard})}); if(!response.ok){ toast('保存到服务端失败'); return; } if(selectedCard.imageData){ await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}/image`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dataUrl:selectedCard.imageData})}); } } $('edit-modal').classList.remove('open'); renderInventory(); showDetail(selectedCard); toast('卡片信息已保存'); });
+    $('edit-form').addEventListener('submit', async e => { e.preventDefault(); const f=e.target; Object.assign(selectedCard, {title:f.title.value, series:f.series.value, type:f.type.value, parallel:f.parallel.value, keywords:[...editingKeywords], price:Number(f.price.value)||0, shipping:Number(f.shipping.value)||0}); selectedCard.cost=selectedCard.price+selectedCard.shipping; if(API_BASE){ const response=await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({card:selectedCard})}); if(!response.ok){ toast('保存到服务端失败'); return; } if(selectedCard.imageData){ await apiFetch(`/api/cards/${encodeURIComponent(selectedCard.id)}/image`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({dataUrl:selectedCard.imageData})}); } } $('edit-modal').classList.remove('open'); renderInventory(); showDetail(selectedCard); toast('卡片信息已保存'); });
     $('mark-sold').addEventListener('click', () => { if(selectedCard.status === '已售'){ selectedCard.status='在库'; showDetail(selectedCard); renderInventory(); renderSales(); toast('已恢复为在库'); } else { saleSelection.add(String(selectedCard.id)); showView('sales'); renderSales(); toast('已加入售出清单，请填写售出价'); } });
     $('manual-card-list').addEventListener('input', e => {
       const input = e.target.closest('[data-manual-field]');
